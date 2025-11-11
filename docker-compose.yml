@@ -1,0 +1,63 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: timelogger-db
+    environment:
+      POSTGRES_USER: timelogger
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: timelogger
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U timelogger" ]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+    networks:
+      - timelogger
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    image: timelogger-backend:latest
+    container_name: timelogger-api
+    environment:
+      DATABASE_URL: postgres://timelogger:password@db:5432/timelogger?sslmode=disable
+    expose:
+      - "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - timelogger
+
+  frontend:
+    build: ./frontend
+    container_name: timelogger-ui
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    networks:
+      - timelogger
+
+  nginx:
+    build: ./nginx
+    container_name: timelogger-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    networks:
+      - timelogger
+
+volumes:
+  pgdata:
+
+networks:
+  timelogger:
