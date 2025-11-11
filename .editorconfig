@@ -1,0 +1,46 @@
+# Top-level EditorConfig file
+# https://editorconfig.org
+
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Go files — follow gofmt standards (tabs, not spaces)
+[*.go]
+indent_style = tab
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# YAML, JSON, and configuration files
+[*.{yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+# Markdown files — keep intentional trailing spaces
+[*.md]
+trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
+
+# Dockerfiles and shell scripts
+[{Dockerfile,*.sh}]
+indent_style = space
+indent_size = 4
+
+# Frontend files (React / JS / JSX / TS)
+[*.{js,jsx,ts,tsx,css,scss,html}]
+indent_style = space
+indent_size = 2
+
+# GitHub / CI files
+[.github/**]
+indent_style = space
+indent_size = 2
