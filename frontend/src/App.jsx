@@ -1,27 +1,90 @@
 import React, { useEffect, useState } from "react";
 import { getEntries, createEntry, updateEntry, deleteEntry } from "./api/entries";
+import { getStartOfWeek, getWeekDays } from "./utils/date";
 import TimesheetTable from "./components/TimesheetTable";
+
+const formatRangeDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+};
+
+const parseHoursInput = (input) => {
+    if (!input) return NaN;
+    const val = String(input).trim().toLowerCase();
+    if (!val) return NaN;
+
+    // Match patterns like "2h", "15m", "2h 30m"
+    const timeRegex = /(\d+(?:\.\d+)?)\s*(h|m)/g;
+    let match;
+    let totalHours = 0;
+    let found = false;
+    while ((match = timeRegex.exec(val)) !== null) {
+        found = true;
+        const num = parseFloat(match[1]);
+        if (Number.isNaN(num)) continue;
+        if (match[2] === "h") totalHours += num;
+        if (match[2] === "m") totalHours += num / 60;
+    }
+    if (found) return totalHours;
+
+    // Fallback: plain numeric hours (supports dot)
+    if (/^-?\d+(\.\d+)?$/.test(val) || /^-?\d+(,\d+)?$/.test(val)) {
+        const numeric = parseFloat(val.replace(",", "."));
+        return Number.isNaN(numeric) ? NaN : numeric;
+    }
+
+    return NaN;
+};
+
+const LABEL_COLORS = {
+    feature: "bg-blue-500",
+    bug: "bg-red-500",
+    meeting: "bg-green-500",
+    research: "bg-yellow-400",
+};
 
 export default function App() {
     const [rows, setRows] = useState([]);
     const [days, setDays] = useState([]);
-    const [showAddButton, setShowAddButton] = useState(false);
     const [adding, setAdding] = useState(false);
+    const [anchorDate, setAnchorDate] = useState(() => getStartOfWeek(new Date())); // Monday of current view
+    const [newTicket, setNewTicket] = useState("");
+    const [newLabel, setNewLabel] = useState("feature");
+    const [newHours, setNewHours] = useState("");
+    const [newDate, setNewDate] = useState(() => {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    });
+    const [errors, setErrors] = useState({});
+    const [fieldsLocked, setFieldsLocked] = useState(false);
 
-    // --- Generate current week days ---
-    useEffect(() => {
-        const today = new Date();
-        const weekDays = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + i));
-            return d;
-        });
-        setDays(weekDays);
-    }, []);
+    const buildRangeParams = (anchor) => {
+        const start = new Date(anchor);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(anchor);
+        end.setDate(end.getDate() + 13); // inclusive of two weeks
+        end.setHours(0, 0, 0, 0);
 
-    // --- Load entries from backend ---
+        return {
+            startStr: start.toISOString().split("T")[0],
+            endStr: end.toISOString().split("T")[0],
+        };
+    };
+
+    // --- Generate day list for current two-week window ---
     useEffect(() => {
-        (async () => {
-            const data = await getEntries();
+        setDays(getWeekDays(anchorDate, 14));
+    }, [anchorDate]);
+
+    // --- Load entries from backend for visible range ---
+    useEffect(() => {
+        const fetchEntries = async () => {
+            const { startStr, endStr } = buildRangeParams(anchorDate);
+            const data = await getEntries({ start: startStr, end: endStr });
 
             // Group entries by ticket -> dateKey (UTC YYYY-MM-DD)
             const grouped = {};
@@ -37,26 +100,25 @@ export default function App() {
                 grouped[e.ticket].cells[utcKey] = e;
             });
             setRows(Object.values(grouped));
-        })();
-    }, []);
+        };
 
-    // --- Handle cell edit ---
-    const handleCellChange = async (ticket, label, utcDate, entry, hours) => {
-        if (entry) {
-            const updated = await updateEntry(entry.id, { ...entry, hours, date: utcDate });
-            setRows((prev) =>
-                prev.map((r) =>
-                    r.ticket === ticket ? { ...r, cells: { ...r.cells, [utcDate.slice(0, 10)]: updated } } : r
-                )
-            );
-        } else {
-            const created = await createEntry({ ticket, label, hours, date: utcDate });
-            setRows((prev) =>
-                prev.map((r) =>
-                    r.ticket === ticket ? { ...r, cells: { ...r.cells, [utcDate.slice(0, 10)]: created } } : r
-                )
-            );
-        }
+        fetchEntries();
+    }, [anchorDate]);
+
+    const goToPreviousWeek = () => {
+        setAnchorDate((prev) => {
+            const d = new Date(prev);
+            d.setDate(d.getDate() - 7);
+            return getStartOfWeek(d);
+        });
+    };
+
+    const goToNextWeek = () => {
+        setAnchorDate((prev) => {
+            const d = new Date(prev);
+            d.setDate(d.getDate() + 7);
+            return getStartOfWeek(d);
+        });
     };
 
     // --- Delete full ticket row ---
@@ -69,13 +131,65 @@ export default function App() {
     };
 
     // --- Add new empty row ---
-    const handleAddRow = async (ticket, label) => {
-        if (!ticket || !label) return;
-        await createEntry({ ticket, label, hours: 0, date: new Date().toISOString() });
-        setAdding(false);
-        setShowAddButton(false);
+    const [activeEntryId, setActiveEntryId] = useState(null);
 
-        const data = await getEntries();
+    const openLogForm = ({ ticket = "", label = "feature", date = new Date(), entry = null, locked = false }) => {
+        const isoDate = new Date(date).toISOString().split("T")[0];
+        setActiveEntryId(entry?.id ?? null);
+        setNewTicket(ticket);
+        setNewLabel(label || "feature");
+        setNewHours(entry ? String(entry.hours ?? "") : "");
+        setNewDate(isoDate);
+        setErrors({});
+        setFieldsLocked(locked);
+        setAdding(true);
+    };
+
+    const resetFormState = () => {
+        setActiveEntryId(null);
+        setNewTicket("");
+        setNewLabel("feature");
+        setNewHours("");
+        setNewDate(() => {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        });
+        setErrors({});
+        setFieldsLocked(false);
+    };
+
+    const handleAddRow = async (ticket, label, hours, dateValue) => {
+        const nextErrors = {};
+        const trimmedTicket = (ticket || "").trim();
+        const trimmedLabel = (label || "").trim();
+        const hoursNum = parseHoursInput(hours);
+        const hasDate = Boolean(dateValue);
+
+        if (!trimmedTicket) nextErrors.ticket = true;
+        if (!trimmedLabel) nextErrors.label = true;
+        if (Number.isNaN(hoursNum) || hoursNum < 0 || hoursNum > 24) nextErrors.hours = true;
+        if (!hasDate) nextErrors.date = true;
+
+        if (Object.keys(nextErrors).length) {
+            setErrors(nextErrors);
+            return;
+        }
+
+        setErrors({});
+
+        const dateISO = dateValue ? new Date(dateValue).toISOString() : new Date().toISOString();
+
+        if (activeEntryId) {
+            await updateEntry(activeEntryId, { id: activeEntryId, ticket: trimmedTicket, label: trimmedLabel, hours: hoursNum, date: dateISO });
+        } else {
+            await createEntry({ ticket: trimmedTicket, label: trimmedLabel, hours: hoursNum, date: dateISO });
+        }
+        setAdding(false);
+        resetFormState();
+
+        const { startStr, endStr } = buildRangeParams(anchorDate);
+        const data = await getEntries({ start: startStr, end: endStr });
         const grouped = {};
         data.forEach((e) => {
             const utcKey = new Date(e.date || e.created_at).toISOString().split("T")[0];
@@ -94,62 +208,131 @@ export default function App() {
                 ⏱️ Time Logger <span className="text-gray-400">– Timesheet</span>
             </h1>
 
+            <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4 text-gray-200">
+                <div className="flex items-center gap-3">
+                    <button
+                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 transition"
+                        onClick={goToPreviousWeek}
+                    >
+                        ← Previous week
+                    </button>
+                    <div className="px-4 py-1 rounded bg-gray-800 border border-gray-700 text-sm">
+                        {days.length > 0
+                            ? `${formatRangeDate(days[0])} – ${formatRangeDate(days[days.length - 1])}`
+                            : ""}
+                    </div>
+                    <button
+                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 transition"
+                        onClick={goToNextWeek}
+                    >
+                        Next week →
+                    </button>
+                </div>
+                <button
+                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition"
+                    onClick={() => openLogForm({})}
+                >
+                    Log time
+                </button>
+            </div>
+
             <div
-                className="relative"
-                onMouseEnter={() => setShowAddButton(true)}
-                onMouseLeave={() => setShowAddButton(false)}
+                className="relative w-full max-w-6xl"
             >
                 <TimesheetTable
                     days={days}
                     rows={rows}
-                    onCellChange={handleCellChange}
+                    onCellOpen={({ ticket, label, date, entry }) => openLogForm({ ticket, label, date, entry, locked: true })}
                     onDeleteRow={handleDeleteRow}
                 />
 
-                {showAddButton && !adding && (
-                    <button
-                        className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full shadow-md hover:bg-blue-700 transition"
-                        onClick={() => setAdding(true)}
-                    >
-                        ➕ Add Row
-                    </button>
-                )}
             </div>
 
             {adding && (
-                <div className="mt-8 flex gap-2 items-center bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700">
-                    <input
-                        type="text"
-                        placeholder="Ticket key (e.g. ABC-123)"
-                        id="ticket"
-                        className="px-3 py-2 rounded bg-gray-900 border border-gray-600 text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    />
-                    <select
-                        id="label"
-                        className="px-3 py-2 rounded bg-gray-900 border border-gray-600 text-gray-100 focus:outline-none"
-                    >
-                        <option value="feature">Feature</option>
-                        <option value="bug">Bug</option>
-                        <option value="meeting">Meeting</option>
-                        <option value="research">Research</option>
-                    </select>
-                    <button
-                        className="bg-blue-600 px-4 py-2 rounded text-white font-medium hover:bg-blue-700"
-                        onClick={() =>
-                            handleAddRow(
-                                document.getElementById("ticket").value,
-                                document.getElementById("label").value
-                            )
-                        }
-                    >
-                        Save
-                    </button>
-                    <button
-                        className="text-gray-400 hover:text-gray-200"
-                        onClick={() => setAdding(false)}
-                    >
-                        ✖ Cancel
-                    </button>
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 w-full max-w-lg">
+                        <h2 className="text-xl font-semibold text-gray-100 mb-4">Log time</h2>
+                        <div className="flex flex-col gap-3">
+                            <input
+                                type="text"
+                                placeholder="Ticket key (e.g. ABC-123)"
+                                value={newTicket}
+                                onChange={(e) => {
+                                    setNewTicket(e.target.value);
+                                    setErrors((prev) => ({ ...prev, ticket: false }));
+                                }}
+                                readOnly={fieldsLocked}
+                                className={`px-3 py-2 rounded border text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-400 w-full ${
+                                    errors.ticket ? "border-red-500 ring-red-400/60" : "border-gray-600"
+                                } ${fieldsLocked ? "bg-gray-800 cursor-not-allowed" : "bg-gray-900"}`}
+                            />
+                            <div className="relative w-full">
+                                <select
+                                    value={newLabel}
+                                    onChange={(e) => {
+                                        setNewLabel(e.target.value);
+                                        setErrors((prev) => ({ ...prev, label: false }));
+                                    }}
+                                    disabled={fieldsLocked}
+                                    className={`label-select px-3 py-2 pr-14 rounded border text-gray-100 focus:outline-none w-full ${
+                                        errors.label ? "border-red-500 ring-1 ring-red-400/60" : "border-gray-600"
+                                    } ${fieldsLocked ? "bg-gray-800 cursor-not-allowed" : "bg-gray-900"}`}
+                                >
+                                    <option value="feature">Feature</option>
+                                    <option value="bug">Bug</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="research">Research</option>
+                                </select>
+                                <span
+                                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-sm border border-gray-600 ${LABEL_COLORS[newLabel] || "bg-gray-500"}`}
+                                    aria-hidden="true"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    placeholder="Hours (e.g. 2.75 or 2h 15m)"
+                                    value={newHours}
+                                    onChange={(e) => {
+                                        setNewHours(e.target.value);
+                                        setErrors((prev) => ({ ...prev, hours: false }));
+                                    }}
+                                    className={`px-3 py-2 rounded bg-gray-900 border text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-400 ${
+                                        errors.hours ? "border-red-500 ring-red-400/60" : "border-gray-600"
+                                    }`}
+                                />
+                                <input
+                                    type="date"
+                                    value={newDate}
+                                    onChange={(e) => {
+                                        setNewDate(e.target.value);
+                                        setErrors((prev) => ({ ...prev, date: false }));
+                                    }}
+                                    className={`px-3 py-2 rounded bg-gray-900 border text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-400 date-input ${
+                                        errors.date ? "border-red-500 ring-red-400/60" : "border-gray-600"
+                                    }`}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-5">
+                            <button
+                                className="text-gray-300 hover:text-white"
+                                onClick={() => {
+                                    setAdding(false);
+                                    resetFormState();
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-600 px-4 py-2 rounded text-white font-medium hover:bg-blue-700"
+                                onClick={() => handleAddRow(newTicket, newLabel, newHours, newDate)}
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

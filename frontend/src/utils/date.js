@@ -10,9 +10,9 @@ export const getStartOfWeek = (date) => {
     return d;
 };
 
-export const getWeekDays = (startDate) => {
+export const getWeekDays = (startDate, totalDays = 7) => {
     const days = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < totalDays; i++) {
         const d = new Date(startDate);
         d.setDate(d.getDate() + i);
         days.push(d);

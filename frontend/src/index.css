@@ -5,3 +5,30 @@
 body {
     @apply bg-gray-900 text-gray-100 font-sans;
 }
+
+.date-input {
+    position: relative;
+    padding-right: 2.75rem;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    filter: invert(75%) sepia(10%) saturate(400%) hue-rotate(180deg) brightness(1.1);
+    opacity: 1;
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+}
+
+.label-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 2.5L6 6l4-3.5' stroke='%23c5d0e0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2.75rem center;
+    background-size: 12px;
+}

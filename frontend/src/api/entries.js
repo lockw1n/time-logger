@@ -2,8 +2,10 @@ import axios from "axios";
 
 const API_URL = "/api/entries";
 
-export async function getEntries() {
-    const res = await axios.get(API_URL);
+export async function getEntries({ start, end } = {}) {
+    const res = await axios.get(API_URL, {
+        params: start && end ? { start, end } : {},
+    });
     return res.data;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 
 const COLORS = {
     bug: "bg-red-500/60 border-red-400/40",
@@ -7,41 +7,22 @@ const COLORS = {
     research: "bg-yellow-500/60 border-yellow-400/40",
 };
 
-export default function TimesheetCell({ entry, label, onChange }) {
-    const [editing, setEditing] = useState(false);
-    const [value, setValue] = useState(entry ? entry.hours : "");
-
+export default function TimesheetCell({ entry, label, onOpen, weekend = false, extraClass = "" }) {
     const isFilled = entry && entry.hours > 0;
-    const bgColor = isFilled ? COLORS[label] || "bg-gray-700/60 border-gray-600"
-        : "bg-gray-800/40 border-gray-700";
+    const emptyBg = weekend ? "bg-slate-600/60 border-slate-500" : "bg-gray-800/40 border-gray-700";
+    const filledBg = COLORS[label] || "bg-gray-700/60 border-gray-600";
+    const bgColor = isFilled ? filledBg : emptyBg;
 
-    const handleBlur = () => {
-        setEditing(false);
-        const num = parseFloat(value);
-        if (!isNaN(num) && num >= 0) onChange(num);
-    };
+    const weekendTint = weekend ? "ring-1 ring-slate-400/50 shadow-inner shadow-slate-300/10" : "";
 
     return (
         <td
-            className={`${bgColor} text-center px-2 py-2 border cursor-pointer transition hover:brightness-110`}
-            onClick={() => setEditing(true)}
+            className={`${bgColor} ${weekendTint} text-center px-2 py-2 border cursor-pointer transition hover:brightness-110 w-20 ${extraClass}`}
+            onClick={onOpen}
         >
-            {editing ? (
-                <input
-                    type="number"
-                    step="0.25"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    onBlur={handleBlur}
-                    onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
-                    className="w-14 rounded bg-gray-900 text-gray-100 text-center border border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    autoFocus
-                />
-            ) : (
-                <span className="font-medium">
-                    {entry && entry.hours > 0 ? entry.hours : ""}
-                </span>
-            )}
+            <span className="font-medium">
+                {entry && entry.hours > 0 ? entry.hours : ""}
+            </span>
         </td>
     );
 }
