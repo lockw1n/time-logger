@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/lockw1n/time-logger/internal/config"
 	"github.com/lockw1n/time-logger/internal/db"
 	"github.com/lockw1n/time-logger/internal/models"
 	"github.com/lockw1n/time-logger/internal/router"
@@ -40,6 +41,7 @@ func main() {
 		log.Fatalf("❌ Migration failed: %v", err)
 	}
 	log.Println("✅ Database schema ready")
+	db.ApplyConstraints(database, config.AllowedLabels())
 
 	r := router.SetupRouter(database)
 

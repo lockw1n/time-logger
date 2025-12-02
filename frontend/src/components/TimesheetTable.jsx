@@ -1,9 +1,10 @@
 import React from "react";
 import TimesheetCell from "./TimesheetCell";
 
-const toUtcKey = (date) => {
-    const utc = new Date(date);
-    return utc.toISOString().split("T")[0]; // YYYY-MM-DD (UTC)
+const toLocalKey = (date) => {
+    const d = new Date(date);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
 const isWeekend = (date) => {
@@ -11,7 +12,14 @@ const isWeekend = (date) => {
     return day === 6 || day === 0;
 };
 
-export default function TimesheetTable({ days, rows, onCellOpen, onDeleteRow }) {
+const formatHours = (val = 0) => {
+    if (val === null || val === undefined) return "";
+    const rounded = Math.round(val * 100) / 100;
+    if (Number.isInteger(rounded)) return String(rounded);
+    return rounded.toFixed(2).replace(/\.?0+$/, "");
+};
+
+export default function TimesheetTable({ days, rows, totalsByTicket = {}, onCellOpen, onDeleteRow }) {
     return (
         <div className="overflow-x-auto shadow-lg rounded-xl bg-gray-800 border border-gray-700">
             <table className="w-full border-collapse text-sm">
@@ -24,7 +32,7 @@ export default function TimesheetTable({ days, rows, onCellOpen, onDeleteRow }) 
                         const separatorClass = startOfSecondWeek ? "border-l-8 border-l-slate-400" : "";
                         return (
                             <th
-                                key={toUtcKey(d)}
+                                key={toLocalKey(d)}
                                 className={`px-3 py-2 text-center w-20 ${weekend ? "bg-slate-700 text-slate-100" : ""} ${separatorClass}`}
                             >
                                 <div className="flex flex-col items-center leading-tight">
@@ -38,6 +46,7 @@ export default function TimesheetTable({ days, rows, onCellOpen, onDeleteRow }) 
                             </th>
                         );
                     })}
+                    <th className="px-3 py-2 text-center w-20">Total</th>
                     <th className="px-2 py-2 text-center">Delete</th>
                 </tr>
                 </thead>
@@ -51,7 +60,7 @@ export default function TimesheetTable({ days, rows, onCellOpen, onDeleteRow }) 
                         <td className="px-4 py-2 font-medium text-blue-300 min-w-[140px]">{row.ticket}</td>
 
                         {days.map((d, idx) => {
-                            const key = toUtcKey(d);
+                            const key = toLocalKey(d);
                             const entry = row.cells[key];
                             const weekend = isWeekend(d);
                             const startOfSecondWeek = idx === 7;
@@ -64,11 +73,14 @@ export default function TimesheetTable({ days, rows, onCellOpen, onDeleteRow }) 
                     label={row.label}
                     weekend={weekend}
                     extraClass={separatorClass}
-                    onOpen={() => onCellOpen({ ticket: row.ticket, label: row.label, date: d, entry })}
+                                onOpen={() => onCellOpen({ ticket: row.ticket, label: row.label, date: d, entry })}
                 />
             );
         })}
 
+                        <td className="px-3 py-2 text-center font-semibold text-gray-100">
+                            {formatHours(totalsByTicket[row.ticket] || 0)}
+                        </td>
                         <td className="px-2 py-2 text-center">
                             <button
                                 onClick={() => onDeleteRow(row.ticket)}

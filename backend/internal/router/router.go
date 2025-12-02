@@ -16,7 +16,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	health.RegisterRoutes(r, db)
 
 	// Entries routes
-	entryHandler := handlers.NewEntryHandler(db)
+	entryService := handlers.NewEntryService(db)
+	entryHandler := handlers.NewEntryHandler(entryService)
 	api := r.Group("/api")
 	{
 		api.GET("/entries", entryHandler.List)
@@ -25,6 +26,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		api.PUT("/entries/:id", entryHandler.Update)
 		api.DELETE("/entries/:id", entryHandler.Delete)
 
+		api.GET("/tickets/summary", entryHandler.Summary)
 		// Delete all entries for a ticket (row delete)
 		api.DELETE("/tickets/:ticket", entryHandler.DeleteByTicket)
 	}
