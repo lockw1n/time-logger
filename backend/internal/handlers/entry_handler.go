@@ -67,6 +67,23 @@ func (h *EntryHandler) Summary(c *gin.Context) {
 	c.JSON(http.StatusOK, summaries)
 }
 
+// ---------- MONTHLY REPORT (for invoices) ----------
+
+func (h *EntryHandler) MonthlyReport(c *gin.Context) {
+	month := c.Query("month")
+	report, err := h.Service.MonthlySummary(month)
+	if err != nil {
+		if err == ErrBadMonth {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "month is required and must be in YYYY-MM format"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to build monthly summary"})
+		return
+	}
+
+	c.JSON(http.StatusOK, report)
+}
+
 // ---------- GET BY ID ----------
 
 func (h *EntryHandler) Get(c *gin.Context) {

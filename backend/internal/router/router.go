@@ -18,6 +18,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	// Entries routes
 	entryService := handlers.NewEntryService(db)
 	entryHandler := handlers.NewEntryHandler(entryService)
+	invoiceHandler := handlers.NewInvoiceHandler(entryService)
 	api := r.Group("/api")
 	{
 		api.GET("/entries", entryHandler.List)
@@ -29,6 +30,9 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		api.GET("/tickets/summary", entryHandler.Summary)
 		// Delete all entries for a ticket (row delete)
 		api.DELETE("/tickets/:ticket", entryHandler.DeleteByTicket)
+
+		api.GET("/reports/monthly", entryHandler.MonthlyReport)
+		api.POST("/reports/invoice/pdf", invoiceHandler.GeneratePDF)
 	}
 
 	return r

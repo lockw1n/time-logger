@@ -38,7 +38,7 @@ indent_size = 4
 # Frontend files (React / JS / JSX / TS)
 [*.{js,jsx,ts,tsx,css,scss,html}]
 indent_style = space
-indent_size = 2
+indent_size = 4
 
 # GitHub / CI files
 [.github/**]

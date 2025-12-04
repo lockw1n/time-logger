@@ -14,6 +14,7 @@ import (
 
 var (
 	ErrBadDateRange = errors.New("bad date range")
+	ErrBadMonth     = errors.New("bad month")
 	ErrInvalidHours = errors.New("invalid hours")
 	ErrInvalidLabel = errors.New("invalid label")
 	ErrInvalidDate  = errors.New("invalid date")
@@ -26,6 +27,19 @@ type EntryService struct {
 	DB            *gorm.DB
 	allowedLabels []string
 	allowedSet    map[string]struct{}
+}
+
+type MonthlyReport struct {
+	Month      string         `json:"month"`
+	Start      string         `json:"start"`
+	End        string         `json:"end"`
+	Items      []labelSummary `json:"items"`
+	TotalHours float64        `json:"total_hours"`
+}
+
+type labelSummary struct {
+	Label      string  `json:"label"`
+	TotalHours float64 `json:"total_hours"`
 }
 
 func NewEntryService(db *gorm.DB) *EntryService {
@@ -92,6 +106,21 @@ func parseDateRange(startStr, endStr string) (time.Time, time.Time, error) {
 	return start, end, nil
 }
 
+func parseMonth(monthStr string) (time.Time, time.Time, error) {
+	monthStr = strings.TrimSpace(monthStr)
+	if monthStr == "" {
+		return time.Time{}, time.Time{}, ErrBadMonth
+	}
+
+	parsed, err := time.Parse("2006-01", monthStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, ErrBadMonth
+	}
+	start := time.Date(parsed.Year(), parsed.Month(), 1, 0, 0, 0, 0, time.UTC)
+	end := start.AddDate(0, 1, 0) // first day of next month
+	return start, end, nil
+}
+
 // Service methods
 
 func (s *EntryService) ListEntries(startStr, endStr string) ([]models.Entry, error) {
@@ -129,6 +158,36 @@ func (s *EntryService) Summary(startStr, endStr string) ([]ticketSummary, error)
 	}
 
 	return summaries, nil
+}
+
+func (s *EntryService) MonthlySummary(monthStr string) (*MonthlyReport, error) {
+	start, end, err := parseMonth(monthStr)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []labelSummary
+	if err := s.DB.Model(&models.Entry{}).
+		Select("COALESCE(label, '') as label, SUM(hours) as total_hours").
+		Where("date >= ? AND date < ?", start, end).
+		Group("label").
+		Order("label asc").
+		Scan(&items).Error; err != nil {
+		return nil, err
+	}
+
+	total := 0.0
+	for _, item := range items {
+		total += item.TotalHours
+	}
+
+	return &MonthlyReport{
+		Month:      start.Format("2006-01"),
+		Start:      start.Format("2006-01-02"),
+		End:        end.AddDate(0, 0, -1).Format("2006-01-02"),
+		Items:      items,
+		TotalHours: total,
+	}, nil
 }
 
 func (s *EntryService) GetEntry(id string) (*models.Entry, error) {

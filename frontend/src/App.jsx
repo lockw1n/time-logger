@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { createEntry, updateEntry, deleteEntry } from "./api/entries";
 import TimesheetTable from "./components/TimesheetTable";
 import TimeLogModal from "./components/TimeLogModal";
+import InvoiceGenerator from "./components/InvoiceGenerator";
 import { useTimesheet } from "./hooks/useTimesheet";
 import { toYMD } from "./utils/date";
 import { parseHoursInput } from "./utils/time";
@@ -160,6 +161,8 @@ export default function App() {
                 onSave={() => handleAddRow(newTicket, newLabel, newHours, newDate)}
                 onDelete={handleDeleteActiveEntry}
             />
+
+            <InvoiceGenerator />
         </div>
     );
 }
