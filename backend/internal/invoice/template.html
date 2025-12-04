@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 2cm;
+            font-family: Arial, sans-serif;
+            font-size: 14pt;
+            color: #000;
+            line-height: 1.4;
+        }
+
+        .header-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .spacer-sm {
+            margin-top: 10px;
+        }
+
+        .spacer-md {
+            margin-top: 18px;
+        }
+
+        .spacer-lg {
+            margin-top: 30px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .text-14 {
+            font-size: 14pt;
+        }
+
+        .text-16 {
+            font-size: 16pt;
+        }
+
+        .intro-text {
+            text-indent: 32px;
+            text-align: left;
+        }
+
+        .consultant-line {
+            text-align: left;
+        }
+
+        .divider {
+            margin: 28px 0 28px;
+            border-top: 1px solid #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14pt;
+        }
+
+        .table-header {
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #000;
+            padding: 4px 6px;
+        }
+
+        .col-desc {
+            width: 50%;
+        }
+
+        .col-qty {
+            width: 20%;
+        }
+
+        .col-unit {
+            width: 15%;
+        }
+
+        .col-amount {
+            width: 15%;
+        }
+
+        .cell {
+            border: 1px solid #000;
+            padding: 4px 6px;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .totals-block {
+            margin-top: 40px;
+            width: 100%;
+            float: none;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 36px;
+            font-size: 14pt;
+            line-height: 1.4;
+        }
+
+        .table-spacer td {
+            border: none;
+            height: 12px;
+            padding: 0;
+        }
+
+        .payment-line {
+            margin-top: 28px;
+            font-weight: bold;
+        }
+
+        .clear {
+            clear: both;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<section class="header-grid">
+    <div>
+        <div>{{.ConsultantName}}</div>
+        <div>{{.ConsultantAddress}}</div>
+        <div>Tax number: {{.ConsultantTaxNumber}}</div>
+    </div>
+
+    <div>
+        <div>{{.CompanyName}}</div>
+        <div>UID: {{.CompanyUID}}</div>
+        <div>{{.CompanyStreet}}</div>
+        <div>{{.CompanyCity}}</div>
+        <div>{{.CompanyCountry}}</div>
+    </div>
+</section>
+
+<!-- ORDER + INVOICE INFO -->
+<div class="spacer-md text-16">
+    <div>Ordernumber: {{.OrderNumber}}</div>
+    <div>Invoice Number: {{.InvoiceNumber}}</div>
+</div>
+
+<!-- DATE & INTRO -->
+<div class="spacer-lg">
+    <div class="center text-16">{{.InvoiceDate}}</div>
+    <div class="spacer-sm intro-text">
+        According to our agreement I’m sending the following invoice for the time
+        period {{.PeriodStart}} to {{.PeriodEnd}}. Billing rate (hourly)
+        {{money .HourlyRate}}.
+    </div>
+    <div class="spacer-md consultant-line text-16">Consultant Name: {{.ConsultantName}}</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TABLE -->
+<table>
+    <thead>
+    <tr>
+        <th class="table-header col-desc">Description</th>
+        <th class="table-header col-qty">Quantity in hours</th>
+        <th class="table-header col-unit">Unit price</th>
+        <th class="table-header col-amount">Amount</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {{range .Items}}
+    <tr>
+        <td class="cell">{{.Description}}</td>
+        <td class="cell right">{{hours .Hours}}</td>
+        <td class="cell right">{{money .UnitPrice}}</td>
+        <td class="cell right"><strong>{{money .Amount}}</strong></td>
+    </tr>
+    {{end}}
+    <tr>
+        <td class="cell">&nbsp;</td>
+        <td class="cell">&nbsp;</td>
+        <td class="cell">&nbsp;</td>
+        <td class="cell">&nbsp;</td>
+    </tr>
+    <tr>
+        <td class="cell"><strong>Total</strong></td>
+        <td class="cell right"><strong>{{hours .TotalHours}}</strong></td>
+        <td class="cell right"></td>
+        <td class="cell right"><strong>{{money .TotalAmount}}</strong></td>
+    </tr>
+    <tr class="table-spacer">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- TOTALS BLOCK (RIGHT ALIGNED LIKE DOCX) -->
+<div class="totals-block">
+    <div class="totals-row">
+        <span>Total hours</span>
+        <span class="right bold">{{hours .TotalHours}}</span>
+    </div>
+
+    <div class="totals-row">
+        <span>Total amount SUM</span>
+        <span class="right bold">{{money .TotalAmount}}</span>
+    </div>
+</div>
+
+<div class="clear"></div>
+
+<!-- PAYMENT CONDITION -->
+<div class="spacer-md payment-line">
+    Payment Condition: {{.PaymentCondition}}
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <div>Account details, IBAN, BIC:</div>
+    <div>Account beneficiary: {{.ConsultantName}}</div>
+    <div>Bank Name: {{.BankName}}</div>
+    <div>Bank Address: {{.BankAddress}}</div>
+    <div>IBAN/Account number: {{.IBAN}}</div>
+    <div>SWIFT/BIC Code: {{.BIC}}</div>
+    <div>Bank Country: {{.BankCountry}}</div>
+</div>
+
+</body>
+</html>
