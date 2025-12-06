@@ -8,6 +8,8 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/lockw1n/time-logger/internal/models"
 )
 
 var DB *gorm.DB
@@ -88,5 +90,16 @@ $$;`, dateConstraintName, dateConstraintName)
 	)
 	if err := database.Exec(constraintSQL).Error; err != nil {
 		log.Printf("warning: unable to apply label allow-list constraint: %v", err)
+	}
+}
+
+// CleanupDeprecatedColumns drops legacy columns that are no longer in the models.
+func CleanupDeprecatedColumns(database *gorm.DB) {
+	if database.Migrator().HasTable(&models.Consultant{}) && database.Migrator().HasColumn(&models.Consultant{}, "name") {
+		if err := database.Migrator().DropColumn(&models.Consultant{}, "name"); err != nil {
+			log.Printf("warning: unable to drop deprecated consultant.name column: %v", err)
+		} else {
+			log.Printf("info: dropped deprecated consultant.name column")
+		}
 	}
 }

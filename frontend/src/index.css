@@ -23,6 +23,10 @@ body {
     height: 18px;
 }
 
+.month-input::-webkit-calendar-picker-indicator {
+    filter: invert(90%) sepia(10%) saturate(300%) hue-rotate(180deg) brightness(1.2);
+}
+
 .label-select {
     appearance: none;
     -webkit-appearance: none;

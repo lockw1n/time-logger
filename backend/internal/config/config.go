@@ -29,12 +29,3 @@ func AllowedLabels() []string {
 	}
 	return labels
 }
-
-// AllowedLabelSet gives O(1) lookups for validation.
-func AllowedLabelSet() map[string]struct{} {
-	set := make(map[string]struct{})
-	for _, label := range AllowedLabels() {
-		set[label] = struct{}{}
-	}
-	return set
-}

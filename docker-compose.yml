@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: timelogger
       POSTGRES_PASSWORD: password
       POSTGRES_DB: timelogger
+    ports:
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -51,8 +53,8 @@ services:
     build: ./nginx
     container_name: timelogger-nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "8085:80"
+      - "8443:443"
     depends_on:
       backend:
         condition: service_healthy

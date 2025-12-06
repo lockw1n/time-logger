@@ -147,14 +147,20 @@
     <div>
         <div>{{.ConsultantName}}</div>
         <div>{{.ConsultantAddress}}</div>
+        {{if .ConsultantAddress2}}<div>{{.ConsultantAddress2}}</div>{{end}}
+        <div>{{.ConsultantZip}} {{.ConsultantCity}}</div>
+        <div>{{.ConsultantCountry}}</div>
+        <div class="spacer-sm"></div>
         <div>Tax number: {{.ConsultantTaxNumber}}</div>
     </div>
+
+    <div class="spacer-sm"></div>
 
     <div>
         <div>{{.CompanyName}}</div>
         <div>UID: {{.CompanyUID}}</div>
         <div>{{.CompanyStreet}}</div>
-        <div>{{.CompanyCity}}</div>
+        <div>{{.CompanyZip}} {{.CompanyCity}}</div>
         <div>{{.CompanyCountry}}</div>
     </div>
 </section>

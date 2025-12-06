@@ -19,7 +19,7 @@ const formatHours = (val = 0) => {
     return rounded.toFixed(2).replace(/\.?0+$/, "");
 };
 
-export default function TimesheetTable({ days, rows, totalsByTicket = {}, onCellOpen, onDeleteRow }) {
+export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellOpen}) {
     return (
         <div className="overflow-x-auto shadow-lg rounded-xl bg-gray-800 border border-gray-700">
             <table className="w-full border-collapse text-sm">
@@ -37,17 +37,16 @@ export default function TimesheetTable({ days, rows, totalsByTicket = {}, onCell
                             >
                                 <div className="flex flex-col items-center leading-tight">
                                     <span className="font-semibold">
-                                        {d.toLocaleDateString(undefined, { weekday: "short" })}
+                                        {d.toLocaleDateString(undefined, {weekday: "short"})}
                                     </span>
                                     <span className="text-xs text-gray-300">
-                                        {d.toLocaleDateString(undefined, { month: "short" })} {d.getDate()}
+                                        {d.toLocaleDateString(undefined, {month: "short"})} {d.getDate()}
                                     </span>
                                 </div>
                             </th>
                         );
                     })}
                     <th className="px-3 py-2 text-center w-20">Total</th>
-                    <th className="px-2 py-2 text-center">Delete</th>
                 </tr>
                 </thead>
 
@@ -67,27 +66,19 @@ export default function TimesheetTable({ days, rows, totalsByTicket = {}, onCell
                             const separatorClass = startOfSecondWeek ? "border-l-8 border-l-slate-400" : "";
 
                             return (
-                <TimesheetCell
-                    key={key}
-                    entry={entry}
-                    label={row.label}
-                    weekend={weekend}
-                    extraClass={separatorClass}
-                                onOpen={() => onCellOpen({ ticket: row.ticket, label: row.label, date: d, entry })}
-                />
-            );
-        })}
+                                <TimesheetCell
+                                    key={key}
+                                    entry={entry}
+                                    label={row.label}
+                                    weekend={weekend}
+                                    extraClass={separatorClass}
+                                    onOpen={() => onCellOpen({ticket: row.ticket, label: row.label, date: d, entry})}
+                                />
+                            );
+                        })}
 
                         <td className="px-3 py-2 text-center font-semibold text-gray-100">
                             {formatHours(totalsByTicket[row.ticket] || 0)}
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                            <button
-                                onClick={() => onDeleteRow(row.ticket)}
-                                className="text-gray-400 hover:text-red-500 transition"
-                            >
-                                🗑️
-                            </button>
                         </td>
                     </tr>
                 ))}

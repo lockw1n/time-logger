@@ -18,7 +18,11 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	// Entries routes
 	entryService := handlers.NewEntryService(db)
 	entryHandler := handlers.NewEntryHandler(entryService)
-	invoiceHandler := handlers.NewInvoiceHandler(entryService)
+	companyService := handlers.NewCompanyService(db)
+	companyHandler := handlers.NewCompanyHandler(companyService)
+	consultantService := handlers.NewConsultantService(db)
+	consultantHandler := handlers.NewConsultantHandler(consultantService)
+	invoiceHandler := handlers.NewInvoiceHandler(entryService, companyService, consultantService)
 	api := r.Group("/api")
 	{
 		api.GET("/entries", entryHandler.List)
@@ -33,6 +37,12 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 		api.GET("/reports/monthly", entryHandler.MonthlyReport)
 		api.POST("/reports/invoice/pdf", invoiceHandler.GeneratePDF)
+
+		api.GET("/company", companyHandler.GetCompany)
+		api.PUT("/company", companyHandler.UpsertCompany)
+
+		api.GET("/consultant", consultantHandler.GetConsultant)
+		api.PUT("/consultant", consultantHandler.UpsertConsultant)
 	}
 
 	return r

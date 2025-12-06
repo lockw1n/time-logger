@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 const LABEL_COLORS = {
     feature: "bg-blue-500",
@@ -24,11 +24,30 @@ export default function TimeLogModal({
     onDelete,
     canDelete = false,
 }) {
+    useEffect(() => {
+        if (!open) return;
+        const onKeyDown = (e) => {
+            if (e.key === "Escape") {
+                onCancel();
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [open, onCancel]);
+
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 w-full max-w-lg">
+        <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+            onClick={onCancel}
+        >
+            <div
+                className="bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 w-full max-w-lg"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <h2 className="text-xl font-semibold text-gray-100 mb-4">Log time</h2>
                 <div className="flex flex-col gap-3">
                     <input

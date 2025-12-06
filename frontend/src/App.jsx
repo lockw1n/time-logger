@@ -71,14 +71,6 @@ export default function App() {
         refresh();
     };
 
-    const handleDeleteRow = async (ticket) => {
-        const row = rows.find((r) => r.ticket === ticket);
-        if (!row) return;
-        const ids = Object.values(row.cells).map((c) => c.id);
-        await Promise.all(ids.map((id) => deleteEntry(id)));
-        refresh();
-    };
-
     const handleDeleteActiveEntry = async () => {
         if (!activeEntryId) return;
         await deleteEntry(activeEntryId);
@@ -125,7 +117,6 @@ export default function App() {
                     rows={rows}
                     totalsByTicket={totals}
                     onCellOpen={({ ticket, label, date, entry }) => openLogForm({ ticket, label, date, entry, locked: true })}
-                    onDeleteRow={handleDeleteRow}
                 />
             </div>
 

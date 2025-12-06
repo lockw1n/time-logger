@@ -17,24 +17,7 @@ const defaultPreviousMonth = () => {
 
 const defaultForm = {
     month: defaultPreviousMonth(),
-    hourly_rate: 100,
     currency: "€",
-    invoice_number: "20251201",
-    order_number: "0000000000",
-    consultant_name: "Oleksii Kotsiuba",
-    consultant_address: "Ukraine, full address here…",
-    consultant_tax_number: "0000000000",
-    company_name: "Company Name",
-    company_uid: "AT U000000000",
-    company_street: "Industriestr. 1",
-    company_city: "0000 city",
-    company_country: "country",
-    bank_name: "UKRSIBBANK",
-    bank_address: "ANDRIIVSKA STREET 21/2 KYIV, UKRAINE",
-    iban: "UA00000000000000000000000000",
-    bic: "KHABUA2K",
-    bank_country: "UKRAINE",
-    payment_condition: "Net 14 days",
 };
 
 export default function InvoiceGenerator() {
@@ -43,10 +26,7 @@ export default function InvoiceGenerator() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    const payload = useMemo(() => {
-        const hourly = Number(form.hourly_rate) || 0;
-        return { ...form, hourly_rate: hourly };
-    }, [form]);
+    const payload = useMemo(() => ({ ...form }), [form]);
 
     const handleChange = (key) => (e) => {
         const value = e.target.value;
@@ -71,6 +51,7 @@ export default function InvoiceGenerator() {
             window.URL.revokeObjectURL(url);
             setSuccess("Invoice PDF downloaded.");
         } catch (err) {
+            console.error("invoice pdf generation failed", err);
             setError("Failed to generate invoice. Check required fields and try again.");
         } finally {
             setLoading(false);
@@ -100,152 +81,15 @@ export default function InvoiceGenerator() {
                         type="month"
                         value={form.month}
                         onChange={handleChange("month")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
+                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 date-input month-input"
                     />
                 </div>
                 <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Hourly rate</label>
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.hourly_rate}
-                        onChange={handleChange("hourly_rate")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Invoice number</label>
+                    <label className="text-gray-300">Currency</label>
                     <input
                         type="text"
-                        value={form.invoice_number}
-                        onChange={handleChange("invoice_number")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Order number</label>
-                    <input
-                        type="text"
-                        value={form.order_number}
-                        onChange={handleChange("order_number")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Consultant name</label>
-                    <input
-                        type="text"
-                        value={form.consultant_name}
-                        onChange={handleChange("consultant_name")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Consultant address</label>
-                    <input
-                        type="text"
-                        value={form.consultant_address}
-                        onChange={handleChange("consultant_address")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Company name</label>
-                    <input
-                        type="text"
-                        value={form.company_name}
-                        onChange={handleChange("company_name")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Company UID</label>
-                    <input
-                        type="text"
-                        value={form.company_uid}
-                        onChange={handleChange("company_uid")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Company street</label>
-                    <input
-                        type="text"
-                        value={form.company_street}
-                        onChange={handleChange("company_street")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Company city</label>
-                    <input
-                        type="text"
-                        value={form.company_city}
-                        onChange={handleChange("company_city")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Company country</label>
-                    <input
-                        type="text"
-                        value={form.company_country}
-                        onChange={handleChange("company_country")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Payment condition</label>
-                    <input
-                        type="text"
-                        value={form.payment_condition}
-                        onChange={handleChange("payment_condition")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Bank name</label>
-                    <input
-                        type="text"
-                        value={form.bank_name}
-                        onChange={handleChange("bank_name")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Bank address</label>
-                    <input
-                        type="text"
-                        value={form.bank_address}
-                        onChange={handleChange("bank_address")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">IBAN</label>
-                    <input
-                        type="text"
-                        value={form.iban}
-                        onChange={handleChange("iban")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">BIC</label>
-                    <input
-                        type="text"
-                        value={form.bic}
-                        onChange={handleChange("bic")}
-                        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
-                    />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-300">Bank country</label>
-                    <input
-                        type="text"
-                        value={form.bank_country}
-                        onChange={handleChange("bank_country")}
+                        value={form.currency}
+                        onChange={handleChange("currency")}
                         className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100"
                     />
                 </div>

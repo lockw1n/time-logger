@@ -37,11 +37,12 @@ func main() {
 	database := retryConnect(5, 2*time.Second)
 
 	log.Println("🛠️ Running migrations...")
-	if err := database.AutoMigrate(&models.Entry{}); err != nil {
+	if err := database.AutoMigrate(models.AllModels...); err != nil {
 		log.Fatalf("❌ Migration failed: %v", err)
 	}
 	log.Println("✅ Database schema ready")
 	db.ApplyConstraints(database, config.AllowedLabels())
+	db.CleanupDeprecatedColumns(database)
 
 	r := router.SetupRouter(database)
 

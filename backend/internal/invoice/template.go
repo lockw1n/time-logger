@@ -22,30 +22,39 @@ type Item struct {
 }
 
 type Data struct {
-	ConsultantName      string  `json:"consultant_name"`
-	ConsultantAddress   string  `json:"consultant_address"`
-	ConsultantTaxNumber string  `json:"consultant_tax_number"`
-	CompanyName         string  `json:"company_name"`
-	CompanyUID          string  `json:"company_uid"`
-	CompanyStreet       string  `json:"company_street"`
-	CompanyCity         string  `json:"company_city"`
-	CompanyCountry      string  `json:"company_country"`
-	OrderNumber         string  `json:"order_number"`
-	InvoiceNumber       string  `json:"invoice_number"`
-	InvoiceDate         string  `json:"invoice_date"`
-	PeriodStart         string  `json:"period_start"`
-	PeriodEnd           string  `json:"period_end"`
-	HourlyRate          float64 `json:"hourly_rate"`
-	Currency            string  `json:"currency"`
-	PaymentCondition    string  `json:"payment_condition"`
-	BankName            string  `json:"bank_name"`
-	BankAddress         string  `json:"bank_address"`
-	IBAN                string  `json:"iban"`
-	BIC                 string  `json:"bic"`
-	BankCountry         string  `json:"bank_country"`
-	Items               []Item  `json:"items"`
-	TotalHours          float64 `json:"total_hours"`
-	TotalAmount         float64 `json:"total_amount"`
+	ConsultantName       string  `json:"consultant_name"`
+	ConsultantFirstName  string  `json:"consultant_first_name"`
+	ConsultantMiddleName string  `json:"consultant_middle_name"`
+	ConsultantLastName   string  `json:"consultant_last_name"`
+	ConsultantAddress    string  `json:"consultant_address"`
+	ConsultantTaxNumber  string  `json:"consultant_tax_number"`
+	ConsultantRegion     string  `json:"consultant_region"`
+	ConsultantZip        string  `json:"consultant_zip"`
+	ConsultantCity       string  `json:"consultant_city"`
+	ConsultantCountry    string  `json:"consultant_country"`
+	ConsultantAddress2   string  `json:"consultant_address2"`
+	CompanyName          string  `json:"company_name"`
+	CompanyUID           string  `json:"company_uid"`
+	CompanyStreet        string  `json:"company_street"`
+	CompanyZip           string  `json:"company_zip"`
+	CompanyCity          string  `json:"company_city"`
+	CompanyCountry       string  `json:"company_country"`
+	OrderNumber          string  `json:"order_number"`
+	InvoiceNumber        string  `json:"invoice_number"`
+	InvoiceDate          string  `json:"invoice_date"`
+	PeriodStart          string  `json:"period_start"`
+	PeriodEnd            string  `json:"period_end"`
+	HourlyRate           float64 `json:"hourly_rate"`
+	Currency             string  `json:"currency"`
+	PaymentCondition     string  `json:"payment_condition"`
+	BankName             string  `json:"bank_name"`
+	BankAddress          string  `json:"bank_address"`
+	IBAN                 string  `json:"iban"`
+	BIC                  string  `json:"bic"`
+	BankCountry          string  `json:"bank_country"`
+	Items                []Item  `json:"items"`
+	TotalHours           float64 `json:"total_hours"`
+	TotalAmount          float64 `json:"total_amount"`
 }
 
 func moneyFormatter(currency string) func(float64) string {
