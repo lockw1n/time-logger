@@ -3,8 +3,8 @@ package label
 import "github.com/lockw1n/time-logger/internal/models"
 
 type Repository interface {
-	Create(label *models.Label) error
-	Update(label *models.Label) error
+	Create(label *models.Label) (*models.Label, error)
+	Update(label *models.Label) (*models.Label, error)
 	Delete(id uint64) error
 
 	FindByID(id uint64) (*models.Label, error)

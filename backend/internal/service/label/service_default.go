@@ -1,6 +1,8 @@
 package label
 
 import (
+	"errors"
+
 	labeldto "github.com/lockw1n/time-logger/internal/dto/label"
 	labelmapper "github.com/lockw1n/time-logger/internal/mapper/label"
 	labelrepo "github.com/lockw1n/time-logger/internal/repository/label"
@@ -18,14 +20,14 @@ func NewService(repo labelrepo.Repository) Service {
    CREATE
 ========================== */
 
-func (s *service) Create(data labeldto.Request) (*labeldto.Response, error) {
-	model := labelmapper.ToModel(data)
-
-	if err := s.repo.Create(model); err != nil {
+func (s *service) Create(req labeldto.Request) (*labeldto.Response, error) {
+	model := labelmapper.ToModel(req)
+	created, err := s.repo.Create(model)
+	if err != nil {
 		return nil, err
 	}
 
-	out := labelmapper.ToResponse(model)
+	out := labelmapper.ToResponse(created)
 	return &out, nil
 }
 
@@ -33,17 +35,22 @@ func (s *service) Create(data labeldto.Request) (*labeldto.Response, error) {
    UPDATE
 ========================== */
 
-func (s *service) Update(id uint64, data labeldto.Request) (*labeldto.Response, error) {
+func (s *service) Update(id uint64, req labeldto.Request) (*labeldto.Response, error) {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, labelrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	updated := labelmapper.ToModel(data)
-	updated.ID = existing.ID
-	updated.CreatedAt = existing.CreatedAt
+	model := labelmapper.ToModel(req)
+	model.ID = existing.ID
+	model.CreatedAt = existing.CreatedAt
 
-	if err := s.repo.Update(updated); err != nil {
+	updated, err := s.repo.Update(model)
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -56,7 +63,14 @@ func (s *service) Update(id uint64, data labeldto.Request) (*labeldto.Response, 
 ========================== */
 
 func (s *service) Delete(id uint64) error {
-	return s.repo.Delete(id)
+	err := s.repo.Delete(id)
+	if err != nil {
+		if errors.Is(err, labelrepo.ErrNotFound) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
 }
 
 /* =======================
@@ -64,12 +78,15 @@ func (s *service) Delete(id uint64) error {
 ========================== */
 
 func (s *service) Get(id uint64) (*labeldto.Response, error) {
-	m, err := s.repo.FindByID(id)
+	model, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, labelrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	out := labelmapper.ToResponse(m)
+	out := labelmapper.ToResponse(model)
 	return &out, nil
 }
 
@@ -91,11 +108,14 @@ func (s *service) ListByCompany(companyID uint64) ([]labeldto.Response, error) {
 ========================== */
 
 func (s *service) GetByName(companyID uint64, name string) (*labeldto.Response, error) {
-	m, err := s.repo.FindByName(companyID, name)
+	model, err := s.repo.FindByName(companyID, name)
 	if err != nil {
+		if errors.Is(err, labelrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	out := labelmapper.ToResponse(m)
+	out := labelmapper.ToResponse(model)
 	return &out, nil
 }

@@ -3,57 +3,56 @@ package app
 import (
 	"gorm.io/gorm"
 
-	"github.com/lockw1n/time-logger/internal/repository/company"
-	"github.com/lockw1n/time-logger/internal/repository/consultant"
-	"github.com/lockw1n/time-logger/internal/repository/consultantassignment"
-	"github.com/lockw1n/time-logger/internal/repository/entry"
-	"github.com/lockw1n/time-logger/internal/repository/invoice"
-	"github.com/lockw1n/time-logger/internal/repository/invoiceline"
-	"github.com/lockw1n/time-logger/internal/repository/label"
-	"github.com/lockw1n/time-logger/internal/repository/ticket"
-
-	svcCompany "github.com/lockw1n/time-logger/internal/service/company"
-	svcConsultant "github.com/lockw1n/time-logger/internal/service/consultant"
-	svcAssignment "github.com/lockw1n/time-logger/internal/service/consultantassignment"
-	svcEntry "github.com/lockw1n/time-logger/internal/service/entry"
-	svcInvoice "github.com/lockw1n/time-logger/internal/service/invoice"
-	svcLabel "github.com/lockw1n/time-logger/internal/service/label"
-	svcTicket "github.com/lockw1n/time-logger/internal/service/ticket"
-	svcTimesheet "github.com/lockw1n/time-logger/internal/service/timesheet"
+	companyrepo "github.com/lockw1n/time-logger/internal/repository/company"
+	consultantrepo "github.com/lockw1n/time-logger/internal/repository/consultant"
+	assignmentrepo "github.com/lockw1n/time-logger/internal/repository/consultantassignment"
+	entryrepo "github.com/lockw1n/time-logger/internal/repository/entry"
+	invoicerepo "github.com/lockw1n/time-logger/internal/repository/invoice"
+	invoicelinerepo "github.com/lockw1n/time-logger/internal/repository/invoiceline"
+	labelrepo "github.com/lockw1n/time-logger/internal/repository/label"
+	ticketrepo "github.com/lockw1n/time-logger/internal/repository/ticket"
+	companyservice "github.com/lockw1n/time-logger/internal/service/company"
+	consultantservice "github.com/lockw1n/time-logger/internal/service/consultant"
+	assignmentservice "github.com/lockw1n/time-logger/internal/service/consultantassignment"
+	entryservice "github.com/lockw1n/time-logger/internal/service/entry"
+	invoiceservice "github.com/lockw1n/time-logger/internal/service/invoice"
+	labelservice "github.com/lockw1n/time-logger/internal/service/label"
+	ticketservice "github.com/lockw1n/time-logger/internal/service/ticket"
+	timesheetService "github.com/lockw1n/time-logger/internal/service/timesheet"
 )
 
 type Container struct {
 	DB *gorm.DB
 
-	CompanyService              svcCompany.Service
-	ConsultantService           svcConsultant.Service
-	ConsultantAssignmentService svcAssignment.Service
-	EntryService                svcEntry.Service
-	LabelService                svcLabel.Service
-	TicketService               svcTicket.Service
-	InvoiceService              svcInvoice.Service
-	TimesheetService            svcTimesheet.Service
+	CompanyService              companyservice.Service
+	ConsultantService           consultantservice.Service
+	ConsultantAssignmentService assignmentservice.Service
+	EntryService                entryservice.Service
+	LabelService                labelservice.Service
+	TicketService               ticketservice.Service
+	InvoiceService              invoiceservice.Service
+	TimesheetService            timesheetService.Service
 }
 
 func NewContainer(db *gorm.DB) *Container {
-	companyRepo := company.NewGormRepository(db)
-	consultantRepo := consultant.NewGormRepository(db)
-	assignmentRepo := consultantassignment.NewGormRepository(db)
-	entryRepo := entry.NewGormRepository(db)
-	labelRepo := label.NewGormRepository(db)
-	ticketRepo := ticket.NewGormRepository(db)
-	invoiceRepo := invoice.NewGormRepository(db)
-	invoiceLineRepo := invoiceline.NewGormRepository(db)
+	companyRepo := companyrepo.NewGormRepository(db)
+	consultantRepo := consultantrepo.NewGormRepository(db)
+	assignmentRepo := assignmentrepo.NewGormRepository(db)
+	entryRepo := entryrepo.NewGormRepository(db)
+	labelRepo := labelrepo.NewGormRepository(db)
+	ticketRepo := ticketrepo.NewGormRepository(db)
+	invoiceRepo := invoicerepo.NewGormRepository(db)
+	invoiceLineRepo := invoicelinerepo.NewGormRepository(db)
 
 	return &Container{
 		DB:                          db,
-		CompanyService:              svcCompany.NewService(companyRepo),
-		ConsultantService:           svcConsultant.NewService(consultantRepo),
-		ConsultantAssignmentService: svcAssignment.NewService(assignmentRepo),
-		EntryService:                svcEntry.NewService(entryRepo, assignmentRepo, ticketRepo),
-		LabelService:                svcLabel.NewService(labelRepo),
-		TicketService:               svcTicket.NewService(ticketRepo),
-		InvoiceService:              svcInvoice.NewService(entryRepo, invoiceRepo, invoiceLineRepo, assignmentRepo),
-		TimesheetService:            svcTimesheet.NewService(entryRepo),
+		CompanyService:              companyservice.NewService(companyRepo),
+		ConsultantService:           consultantservice.NewService(consultantRepo),
+		ConsultantAssignmentService: assignmentservice.NewService(assignmentRepo),
+		EntryService:                entryservice.NewService(entryRepo, assignmentRepo, ticketRepo),
+		LabelService:                labelservice.NewService(labelRepo),
+		TicketService:               ticketservice.NewService(ticketRepo),
+		InvoiceService:              invoiceservice.NewService(entryRepo, invoiceRepo, invoiceLineRepo, assignmentRepo),
+		TimesheetService:            timesheetService.NewService(entryRepo),
 	}
 }

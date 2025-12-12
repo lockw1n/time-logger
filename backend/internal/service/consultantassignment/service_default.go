@@ -18,8 +18,8 @@ func NewService(repo assignmentrepo.Repository) Service {
 
 /* --------------------- CREATE --------------------- */
 
-func (s *service) Create(data assignmentdto.Request) (*assignmentdto.Response, error) {
-	model, err := assignmentmapper.ToModel(data)
+func (s *service) Create(req assignmentdto.Request) (*assignmentdto.Response, error) {
+	model, err := assignmentmapper.ToModel(req)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (s *service) Create(data assignmentdto.Request) (*assignmentdto.Response, e
 
 /* --------------------- UPDATE --------------------- */
 
-func (s *service) Update(id uint64, data assignmentdto.Request) (*assignmentdto.Response, error) {
+func (s *service) Update(id uint64, req assignmentdto.Request) (*assignmentdto.Response, error) {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
 		if errors.Is(err, assignmentrepo.ErrNotFound) {
@@ -45,7 +45,7 @@ func (s *service) Update(id uint64, data assignmentdto.Request) (*assignmentdto.
 		return nil, err
 	}
 
-	model, err := assignmentmapper.ToModel(data)
+	model, err := assignmentmapper.ToModel(req)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (s *service) Delete(id uint64) error {
 /* --------------------- GET by ID --------------------- */
 
 func (s *service) Get(id uint64) (*assignmentdto.Response, error) {
-	m, err := s.repo.FindByID(id)
+	model, err := s.repo.FindByID(id)
 	if err != nil {
 		if errors.Is(err, assignmentrepo.ErrNotFound) {
 			return nil, ErrNotFound
@@ -87,7 +87,7 @@ func (s *service) Get(id uint64) (*assignmentdto.Response, error) {
 		return nil, err
 	}
 
-	out := assignmentmapper.ToResponse(m)
+	out := assignmentmapper.ToResponse(model)
 	return &out, nil
 }
 
@@ -124,7 +124,7 @@ func (s *service) GetForCompany(companyID uint64) ([]assignmentdto.Response, err
 /* --------------------- GET Pair (Consultant + Company) --------------------- */
 
 func (s *service) GetPair(consultantID, companyID uint64) (*assignmentdto.Response, error) {
-	m, err := s.repo.FindByPair(consultantID, companyID)
+	model, err := s.repo.FindByPair(consultantID, companyID)
 	if err != nil {
 		if errors.Is(err, assignmentrepo.ErrNotFound) {
 			return nil, ErrNotFound
@@ -132,6 +132,6 @@ func (s *service) GetPair(consultantID, companyID uint64) (*assignmentdto.Respon
 		return nil, err
 	}
 
-	out := assignmentmapper.ToResponse(m)
+	out := assignmentmapper.ToResponse(model)
 	return &out, nil
 }

@@ -1,6 +1,8 @@
 package company
 
 import (
+	"errors"
+
 	companydto "github.com/lockw1n/time-logger/internal/dto/company"
 	companymapper "github.com/lockw1n/time-logger/internal/mapper/company"
 	companyrepo "github.com/lockw1n/time-logger/internal/repository/company"
@@ -14,31 +16,34 @@ func NewService(repo companyrepo.Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) Create(data companydto.Request) (*companydto.Response, error) {
-	// DTO → Model
-	model := companymapper.ToModel(data)
+func (s *service) Create(req companydto.Request) (*companydto.Response, error) {
+	model := companymapper.ToModel(req)
+	created, err := s.repo.Create(model)
 
-	// Save
-	if err := s.repo.Create(model); err != nil {
-		return nil, err
-	}
-
-	// Model → DTO
-	out := companymapper.ToResponse(model)
-	return &out, nil
-}
-
-func (s *service) Update(id uint64, data companydto.Request) (*companydto.Response, error) {
-	existing, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	updated := companymapper.ToModel(data)
-	updated.ID = existing.ID
-	updated.CreatedAt = existing.CreatedAt
+	out := companymapper.ToResponse(created)
+	return &out, nil
+}
 
-	if err := s.repo.Update(updated); err != nil {
+func (s *service) Update(id uint64, req companydto.Request) (*companydto.Response, error) {
+	existing, err := s.repo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, companyrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	model := companymapper.ToModel(req)
+	model.ID = existing.ID
+	model.CreatedAt = existing.CreatedAt
+
+	updated, err := s.repo.Update(model)
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -47,26 +52,39 @@ func (s *service) Update(id uint64, data companydto.Request) (*companydto.Respon
 }
 
 func (s *service) Delete(id uint64) error {
-	return s.repo.Delete(id)
+	err := s.repo.Delete(id)
+	if err != nil {
+		if errors.Is(err, companyrepo.ErrNotFound) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *service) Get(id uint64) (*companydto.Response, error) {
-	m, err := s.repo.FindByID(id)
+	model, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, companyrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	out := companymapper.ToResponse(m)
+	out := companymapper.ToResponse(model)
 	return &out, nil
 }
 
 func (s *service) GetByName(name string) (*companydto.Response, error) {
-	m, err := s.repo.FindByName(name)
+	model, err := s.repo.FindByName(name)
 	if err != nil {
+		if errors.Is(err, companyrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	out := companymapper.ToResponse(m)
+	out := companymapper.ToResponse(model)
 	return &out, nil
 }
 

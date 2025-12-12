@@ -74,11 +74,11 @@ func (r *gormRepository) Delete(id uint64) error {
 }
 
 func (r *gormRepository) FindByID(id uint64) (*models.ConsultantAssignment, error) {
-	var cc models.ConsultantAssignment
+	var assignment models.ConsultantAssignment
 	err := r.db.
 		Preload("Consultant").
 		Preload("Company").
-		First(&cc, id).Error
+		First(&assignment, id).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
@@ -87,16 +87,16 @@ func (r *gormRepository) FindByID(id uint64) (*models.ConsultantAssignment, erro
 	if err != nil {
 		return nil, err
 	}
-	return &cc, nil
+	return &assignment, nil
 }
 
 func (r *gormRepository) FindByPair(consultantID, companyID uint64) (*models.ConsultantAssignment, error) {
-	var cc models.ConsultantAssignment
+	var assignment models.ConsultantAssignment
 	err := r.db.
 		Where("consultant_id = ? AND company_id = ?", consultantID, companyID).
 		Preload("Consultant").
 		Preload("Company").
-		First(&cc).Error
+		First(&assignment).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
@@ -105,7 +105,7 @@ func (r *gormRepository) FindByPair(consultantID, companyID uint64) (*models.Con
 	if err != nil {
 		return nil, err
 	}
-	return &cc, nil
+	return &assignment, nil
 }
 
 func (r *gormRepository) FindByConsultant(consultantID uint64) ([]models.ConsultantAssignment, error) {

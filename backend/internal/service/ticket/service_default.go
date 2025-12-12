@@ -20,8 +20,8 @@ func NewService(repo ticketrepo.Repository) Service {
    CREATE
 ========================== */
 
-func (s *service) Create(data ticketdto.Request) (*ticketdto.Response, error) {
-	model := ticketmapper.ToModel(data)
+func (s *service) Create(req ticketdto.Request) (*ticketdto.Response, error) {
+	model := ticketmapper.ToModel(req)
 	created, err := s.repo.Create(model)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (s *service) Create(data ticketdto.Request) (*ticketdto.Response, error) {
    UPDATE
 ========================== */
 
-func (s *service) Update(id uint64, data ticketdto.Request) (*ticketdto.Response, error) {
+func (s *service) Update(id uint64, req ticketdto.Request) (*ticketdto.Response, error) {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
 		if errors.Is(err, ticketrepo.ErrNotFound) {
@@ -44,7 +44,7 @@ func (s *service) Update(id uint64, data ticketdto.Request) (*ticketdto.Response
 		return nil, err
 	}
 
-	model := ticketmapper.ToModel(data)
+	model := ticketmapper.ToModel(req)
 	model.ID = existing.ID
 	model.CreatedAt = existing.CreatedAt
 

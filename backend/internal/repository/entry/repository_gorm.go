@@ -21,7 +21,6 @@ func (r *gormRepository) Create(entry *models.Entry) (*models.Entry, error) {
 		return nil, err
 	}
 
-	// Reload with preloads for response mapping
 	var out models.Entry
 	if err := r.db.
 		Preload("Ticket").
@@ -48,7 +47,6 @@ func (r *gormRepository) Update(entry *models.Entry) (*models.Entry, error) {
 		return nil, ErrNotFound
 	}
 
-	// Reload entry with preloads
 	var updated models.Entry
 	if err := r.db.
 		Preload("Ticket").

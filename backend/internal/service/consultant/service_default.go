@@ -1,6 +1,8 @@
 package consultant
 
 import (
+	"errors"
+
 	consultantdto "github.com/lockw1n/time-logger/internal/dto/consultant"
 	consultantmapper "github.com/lockw1n/time-logger/internal/mapper/consultant"
 	consultantrepo "github.com/lockw1n/time-logger/internal/repository/consultant"
@@ -16,32 +18,36 @@ func NewService(repo consultantrepo.Repository) Service {
 
 /* ------------------ CREATE ------------------ */
 
-func (s *service) Create(data consultantdto.Request) (*consultantdto.Response, error) {
-	model := consultantmapper.ToModel(data)
+func (s *service) Create(req consultantdto.Request) (*consultantdto.Response, error) {
+	model := consultantmapper.ToModel(req)
+	created, err := s.repo.Create(model)
 
-	if err := s.repo.Create(model); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	out := consultantmapper.ToResponse(model)
+	out := consultantmapper.ToResponse(created)
 	return &out, nil
 }
 
 /* ------------------ UPDATE ------------------ */
 
-func (s *service) Update(id uint64, data consultantdto.Request) (*consultantdto.Response, error) {
+func (s *service) Update(id uint64, req consultantdto.Request) (*consultantdto.Response, error) {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, consultantrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	updated := consultantmapper.ToModel(data)
+	model := consultantmapper.ToModel(req)
+	model.ID = existing.ID
+	model.CreatedAt = existing.CreatedAt
 
-	// preserve identity + timestamps
-	updated.ID = existing.ID
-	updated.CreatedAt = existing.CreatedAt
+	updated, err := s.repo.Update(model)
 
-	if err := s.repo.Update(updated); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -52,18 +58,28 @@ func (s *service) Update(id uint64, data consultantdto.Request) (*consultantdto.
 /* ------------------ DELETE ------------------ */
 
 func (s *service) Delete(id uint64) error {
-	return s.repo.Delete(id)
+	err := s.repo.Delete(id)
+	if err != nil {
+		if errors.Is(err, consultantrepo.ErrNotFound) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
 }
 
 /* ------------------ GET ------------------ */
 
 func (s *service) Get(id uint64) (*consultantdto.Response, error) {
-	c, err := s.repo.FindByID(id)
+	consultant, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, consultantrepo.ErrNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	out := consultantmapper.ToResponse(c)
+	out := consultantmapper.ToResponse(consultant)
 	return &out, nil
 }
 

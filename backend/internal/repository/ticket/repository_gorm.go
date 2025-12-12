@@ -20,7 +20,6 @@ func (r *gormRepository) Create(ticket *models.Ticket) (*models.Ticket, error) {
 		return nil, err
 	}
 
-	// Reload with preloads for response mapping
 	var out models.Ticket
 	if err := r.db.
 		Preload("Company").
@@ -46,7 +45,6 @@ func (r *gormRepository) Update(ticket *models.Ticket) (*models.Ticket, error) {
 		return nil, ErrNotFound
 	}
 
-	// Reload entry with preloads
 	var updated models.Ticket
 	if err := r.db.
 		Preload("Company").
@@ -91,6 +89,7 @@ func (r *gormRepository) FindByCode(companyID uint64, code string) (*models.Tick
 	var ticket models.Ticket
 	err := r.db.
 		Where("company_id = ? AND code = ?", companyID, code).
+		Preload("Company").
 		First(&ticket).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -107,12 +106,15 @@ func (r *gormRepository) FindByCompany(companyID uint64) ([]models.Ticket, error
 	var list []models.Ticket
 	err := r.db.
 		Where("company_id = ?", companyID).
+		Preload("Company").
 		Find(&list).Error
 	return list, err
 }
 
 func (r *gormRepository) ListAll() ([]models.Ticket, error) {
 	var list []models.Ticket
-	err := r.db.Find(&list).Error
+	err := r.db.
+		Preload("Company").
+		Find(&list).Error
 	return list, err
 }

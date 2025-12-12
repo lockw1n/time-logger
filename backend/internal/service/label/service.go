@@ -5,8 +5,8 @@ import (
 )
 
 type Service interface {
-	Create(data labeldto.Request) (*labeldto.Response, error)
-	Update(id uint64, data labeldto.Request) (*labeldto.Response, error)
+	Create(req labeldto.Request) (*labeldto.Response, error)
+	Update(id uint64, req labeldto.Request) (*labeldto.Response, error)
 	Delete(id uint64) error
 
 	Get(id uint64) (*labeldto.Response, error)
