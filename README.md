@@ -20,14 +20,20 @@ curl -X PUT http://localhost:8085/api/company \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Acme Inc",
-    "uid": "AT U1234567",
+    "name_short": "ACME",
+    "tax_number": "AT U1234567",
     "address_line1": "Main Street 1",
+    "address_line2": "Suite 42",
     "zip": "1010",
     "city": "Vienna",
-    "country": "Austria"
+    "region": "Vienna",
+    "country": "Austria",
+    "payment_terms": "Net 14 days"
   }'
 ```
 
 Fetch the current values with `GET /api/company`. Invoice generation will fail with `400 company not configured` until a record exists.
+
+Consultant records follow a similar one-row setup via `PUT /api/consultant` (first_name/last_name required). Hourly rate and order number are currently filled with defaults in invoice generation.
 
 Invoice numbers are auto-generated based on the report month: they are always the first day of the following month in `YYYYMMDD` format (e.g., report for `2025-11` → invoice number `20251201`).

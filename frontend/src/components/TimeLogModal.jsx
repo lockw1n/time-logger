@@ -1,16 +1,10 @@
-import React, { useEffect } from "react";
-
-const LABEL_COLORS = {
-    feature: "bg-blue-500",
-    bug: "bg-red-500",
-    meeting: "bg-green-500",
-    research: "bg-yellow-400",
-};
+import React, { useEffect, useMemo } from "react";
 
 export default function TimeLogModal({
     open,
     ticket,
-    label,
+    labelId,
+    labelOptions = [],
     hours,
     date,
     errors = {},
@@ -24,6 +18,15 @@ export default function TimeLogModal({
     onDelete,
     canDelete = false,
 }) {
+    const selectedLabel = useMemo(
+        () => labelOptions.find((option) => String(option.id) === String(labelId)),
+        [labelId, labelOptions]
+    );
+
+    const swatchStyle = selectedLabel?.color
+        ? { backgroundColor: selectedLabel.color }
+        : undefined;
+
     useEffect(() => {
         if (!open) return;
         const onKeyDown = (e) => {
@@ -62,22 +65,27 @@ export default function TimeLogModal({
                     />
                     <div className="relative w-full">
                         <select
-                            value={label}
-                            onChange={(e) => onChangeLabel(e.target.value)}
+                            value={labelId ?? ""}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                onChangeLabel(value === "" ? null : Number(value));
+                            }}
                             disabled={locked}
                             className={`label-select px-3 py-2 pr-14 rounded border text-gray-100 focus:outline-none w-full ${
                                 errors.label ? "border-red-500 ring-1 ring-red-400/60" : "border-gray-600"
                             } ${locked ? "bg-gray-800 cursor-not-allowed" : "bg-gray-900"}`}
                         >
-                            <option value="feature">Feature</option>
-                            <option value="bug">Bug</option>
-                            <option value="meeting">Meeting</option>
-                            <option value="research">Research</option>
+                            {labelOptions.map((option) => (
+                                <option key={option.id ?? "none"} value={option.id ?? ""}>
+                                    {option.name || "No label"}
+                                </option>
+                            ))}
                         </select>
                         <span
                             className={`absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-sm border border-gray-600 ${
-                                LABEL_COLORS[label] || "bg-gray-500"
+                                swatchStyle ? "" : "bg-gray-500"
                             }`}
+                            style={swatchStyle}
                             aria-hidden="true"
                         />
                     </div>

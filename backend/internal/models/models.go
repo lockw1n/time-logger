@@ -1,7 +1,16 @@
 package models
 
 var AllModels = []any{
-	&Entry{},
 	&Company{},
 	&Consultant{},
+
+	&ConsultantAssignment{},
+
+	&Ticket{},
+	&Label{},
+
+	&Entry{},
+
+	&Invoice{},
+	&InvoiceLine{},
 }

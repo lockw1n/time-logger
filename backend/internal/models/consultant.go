@@ -2,26 +2,31 @@ package models
 
 import "time"
 
-// Consultant holds personal/billing details for the consultant.
 type Consultant struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	FirstName   string    `json:"first_name"`
-	MiddleName  string    `json:"middle_name"`
-	LastName    string    `json:"last_name"`
-	Country     string    `json:"country"`
-	Zip         string    `json:"zip"`
-	Region      string    `json:"region"`
-	City        string    `json:"city"`
-	Address1    string    `json:"address_line1"`
-	Address2    string    `json:"address_line2"`
-	TaxNumber   string    `json:"tax_number"`
-	BankName    string    `json:"bank_name"`
-	BankAddress string    `json:"bank_address"`
-	BankCountry string    `json:"bank_country"`
-	IBAN        string    `json:"iban"`
-	BIC         string    `json:"bic"`
-	OrderNumber string    `json:"order_number"`
-	HourlyRate  float64   `json:"hourly_rate"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID         uint64  `gorm:"primaryKey;autoIncrement"`
+	FirstName  string  `gorm:"column:first_name;not null"`
+	MiddleName *string `gorm:"column:middle_name"`
+	LastName   string  `gorm:"column:last_name;not null"`
+
+	AddressLine1 string  `gorm:"column:address_line1;not null"`
+	AddressLine2 *string `gorm:"column:address_line2"`
+	Zip          string  `gorm:"column:zip;not null"`
+	City         string  `gorm:"column:city;not null"`
+	Region       *string `gorm:"column:region"`
+	Country      string  `gorm:"column:country;not null"`
+
+	TaxNumber *string `gorm:"column:tax_number"`
+
+	BankName    string `gorm:"column:bank_name;not null"`
+	BankAddress string `gorm:"column:bank_address;not null"`
+	BankCountry string `gorm:"column:bank_country;not null"`
+	BankIBAN    string `gorm:"column:bank_iban;not null"`
+	BankBIC     string `gorm:"column:bank_bic;not null"`
+
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (Consultant) TableName() string {
+	return "consultants"
 }

@@ -7,17 +7,18 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lockw1n/time-logger/internal/handlers/consultant"
 
 	"github.com/lockw1n/time-logger/internal/invoice"
 )
 
 type InvoiceHandler struct {
 	Service        *EntryService
-	CompanyService *CompanyService
-	ConsultantSrv  *ConsultantService
+	CompanyService *company.CompanyService
+	ConsultantSrv  *consultant.ConsultantService
 }
 
-func NewInvoiceHandler(service *EntryService, companyService *CompanyService, consultantService *ConsultantService) *InvoiceHandler {
+func NewInvoiceHandler(service *EntryService, companyService *company.CompanyService, consultantService *consultant.ConsultantService) *InvoiceHandler {
 	return &InvoiceHandler{
 		Service:        service,
 		CompanyService: companyService,
@@ -109,7 +110,7 @@ func (h *InvoiceHandler) GeneratePDF(c *gin.Context) {
 		currency = "€"
 	}
 
-	paymentCondition := company.Payment
+	paymentCondition := company.PaymentTerms
 	if paymentCondition == "" {
 		paymentCondition = "Net 14 days"
 	}
@@ -130,8 +131,11 @@ func (h *InvoiceHandler) GeneratePDF(c *gin.Context) {
 
 	items := make([]invoice.Item, 0, len(report.Items))
 	totalAmount := 0.0
+	const defaultHourlyRate = 100.0
+	const defaultOrderNumber = "N/A"
+	rate := defaultHourlyRate
+
 	for _, it := range report.Items {
-		rate := consultant.HourlyRate
 		amount := it.TotalHours * rate
 		items = append(items, invoice.Item{
 			Description: it.Label,
@@ -157,23 +161,26 @@ func (h *InvoiceHandler) GeneratePDF(c *gin.Context) {
 		ConsultantCity:       consultant.City,
 		ConsultantCountry:    consultant.Country,
 		CompanyName:          company.Name,
-		CompanyUID:           company.UID,
+		CompanyNameShort:     company.NameShort,
+		CompanyTaxNumber:     company.TaxNumber,
 		CompanyStreet:        company.AddressLine1,
+		CompanyStreet2:       company.AddressLine2,
 		CompanyCity:          company.City,
+		CompanyRegion:        company.Region,
 		CompanyCountry:       company.Country,
 		CompanyZip:           company.Zip,
-		OrderNumber:          consultant.OrderNumber,
+		OrderNumber:          defaultOrderNumber,
 		InvoiceNumber:        invoiceNumber,
 		InvoiceDate:          invoiceDate,
 		PeriodStart:          periodStart,
 		PeriodEnd:            periodEnd,
-		HourlyRate:           consultant.HourlyRate,
+		HourlyRate:           rate,
 		Currency:             currency,
 		PaymentCondition:     paymentCondition,
 		BankName:             consultant.BankName,
 		BankAddress:          consultant.BankAddress,
-		IBAN:                 consultant.IBAN,
-		BIC:                  consultant.BIC,
+		IBAN:                 consultant.BankIBAN,
+		BIC:                  consultant.BankBIC,
 		BankCountry:          consultant.BankCountry,
 		Items:                items,
 		TotalHours:           report.TotalHours,

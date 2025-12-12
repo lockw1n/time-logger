@@ -51,12 +51,12 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                 </thead>
 
                 <tbody>
-                {rows.map((row) => (
+                {rows.map((row, rowIdx) => (
                     <tr
-                        key={row.ticket}
+                        key={row.ticket?.code || row.ticket?.id || rowIdx}
                         className="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                     >
-                        <td className="px-4 py-2 font-medium text-blue-300 min-w-[140px]">{row.ticket}</td>
+                        <td className="px-4 py-2 font-medium text-blue-300 min-w-[140px]">{row.ticket?.code || "—"}</td>
 
                         {days.map((d, idx) => {
                             const key = toLocalKey(d);
@@ -69,7 +69,8 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                                 <TimesheetCell
                                     key={key}
                                     entry={entry}
-                                    label={row.label}
+                                    label={row.label?.name}
+                                    color={row.color}
                                     weekend={weekend}
                                     extraClass={separatorClass}
                                     onOpen={() => onCellOpen({ticket: row.ticket, label: row.label, date: d, entry})}
@@ -78,7 +79,7 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                         })}
 
                         <td className="px-3 py-2 text-center font-semibold text-gray-100">
-                            {formatHours(totalsByTicket[row.ticket] || 0)}
+                            {formatHours(totalsByTicket[row.ticket?.code] || 0)}
                         </td>
                     </tr>
                 ))}

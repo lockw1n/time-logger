@@ -158,9 +158,9 @@
 
     <div>
         <div>{{.CompanyName}}</div>
-        <div>UID: {{.CompanyUID}}</div>
-        <div>{{.CompanyStreet}}</div>
-        <div>{{.CompanyZip}} {{.CompanyCity}}</div>
+        <div>Tax number: {{.CompanyTaxNumber}}</div>
+        <div>{{.CompanyStreet}} {{if .CompanyStreet2}}, {{.CompanyStreet2}}{{end}}</div>
+        <div>{{if .CompanyRegion}}{{.CompanyRegion}}, {{end}}{{.CompanyZip}} {{.CompanyCity}}</div>
         <div>{{.CompanyCountry}}</div>
     </div>
 </section>

@@ -8,21 +8,26 @@ import { toYMD } from "./utils/date";
 import { parseHoursInput } from "./utils/time";
 
 export default function App() {
-    const { days, rows, totals, rangeLabel, goToNextWeek, goToPreviousWeek, refresh } = useTimesheet();
+    const { days, rows, totals, rangeLabel, labelOptions, ticketOptions, goToNextWeek, goToPreviousWeek, refresh } =
+        useTimesheet();
 
     const [adding, setAdding] = useState(false);
     const [activeEntryId, setActiveEntryId] = useState(null);
     const [newTicket, setNewTicket] = useState("");
-    const [newLabel, setNewLabel] = useState("feature");
+    const [newLabelId, setNewLabelId] = useState(null);
     const [newHours, setNewHours] = useState("");
     const [newDate, setNewDate] = useState(() => toYMD(new Date()));
     const [errors, setErrors] = useState({});
     const [fieldsLocked, setFieldsLocked] = useState(false);
 
-    const openLogForm = ({ ticket = "", label = "feature", date = new Date(), entry = null, locked = false }) => {
+    const getDefaultLabelId = () => labelOptions?.[0]?.id ?? null;
+
+    const openLogForm = ({ ticket = "", label = null, date = new Date(), entry = null, locked = false }) => {
+        const resolvedLabelId = label?.id ?? getDefaultLabelId();
+        const resolvedTicketCode = ticket?.code || "";
         setActiveEntryId(entry?.id ?? null);
-        setNewTicket(ticket);
-        setNewLabel(label || "feature");
+        setNewTicket(resolvedTicketCode);
+        setNewLabelId(resolvedLabelId);
         setNewHours(entry ? String(entry.hours ?? "") : "");
         setNewDate(toYMD(date));
         setErrors({});
@@ -33,22 +38,23 @@ export default function App() {
     const resetFormState = () => {
         setActiveEntryId(null);
         setNewTicket("");
-        setNewLabel("feature");
+        setNewLabelId(getDefaultLabelId());
         setNewHours("");
         setNewDate(toYMD(new Date()));
         setErrors({});
         setFieldsLocked(false);
     };
 
-    const handleAddRow = async (ticket, label, hours, dateValue) => {
+    const handleAddRow = async (ticketCode, labelId, hours, dateValue) => {
         const nextErrors = {};
-        const trimmedTicket = (ticket || "").trim();
-        const trimmedLabel = (label || "").trim();
+        const trimmedTicket = (ticketCode || "").trim();
+        const selectedLabel = labelOptions.find((opt) => String(opt.id) === String(labelId));
         const hoursNum = parseHoursInput(hours);
         const hasDate = Boolean(dateValue);
+        const hasLabel = selectedLabel || !labelOptions.length;
 
         if (!trimmedTicket) nextErrors.ticket = true;
-        if (!trimmedLabel) nextErrors.label = true;
+        if (!hasLabel) nextErrors.label = true;
         if (Number.isNaN(hoursNum) || hoursNum < 0 || hoursNum > 24) nextErrors.hours = true;
         if (!hasDate) nextErrors.date = true;
 
@@ -59,11 +65,23 @@ export default function App() {
 
         setErrors({});
         const dateISO = (dateValue && dateValue.trim()) || toYMD(new Date());
+        const durationMinutes = Math.round(hoursNum * 60);
+        if (durationMinutes % 15 !== 0) {
+            setErrors({ hours: true });
+            return;
+        }
+
+        const payload = {
+            ticket_code: trimmedTicket,
+            label_id: selectedLabel?.id ?? null,
+            date: dateISO,
+            duration_minutes: durationMinutes,
+        };
 
         if (activeEntryId) {
-            await updateEntry(activeEntryId, { id: activeEntryId, ticket: trimmedTicket, label: trimmedLabel, hours: hoursNum, date: dateISO });
+            await updateEntry(activeEntryId, payload);
         } else {
-            await createEntry({ ticket: trimmedTicket, label: trimmedLabel, hours: hoursNum, date: dateISO });
+            await createEntry(payload);
         }
         setAdding(false);
         resetFormState();
@@ -123,7 +141,8 @@ export default function App() {
             <TimeLogModal
                 open={adding}
                 ticket={newTicket}
-                label={newLabel}
+                labelId={newLabelId}
+                labelOptions={labelOptions}
                 hours={newHours}
                 date={newDate}
                 errors={errors}
@@ -134,7 +153,7 @@ export default function App() {
                     setErrors((prev) => ({ ...prev, ticket: false }));
                 }}
                 onChangeLabel={(val) => {
-                    setNewLabel(val);
+                    setNewLabelId(val);
                     setErrors((prev) => ({ ...prev, label: false }));
                 }}
                 onChangeHours={(val) => {
@@ -149,7 +168,7 @@ export default function App() {
                     setAdding(false);
                     resetFormState();
                 }}
-                onSave={() => handleAddRow(newTicket, newLabel, newHours, newDate)}
+                onSave={() => handleAddRow(newTicket, newLabelId, newHours, newDate)}
                 onDelete={handleDeleteActiveEntry}
             />
 

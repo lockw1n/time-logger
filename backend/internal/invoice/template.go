@@ -34,10 +34,13 @@ type Data struct {
 	ConsultantCountry    string  `json:"consultant_country"`
 	ConsultantAddress2   string  `json:"consultant_address2"`
 	CompanyName          string  `json:"company_name"`
-	CompanyUID           string  `json:"company_uid"`
+	CompanyNameShort     string  `json:"company_name_short"`
+	CompanyTaxNumber     string  `json:"company_tax_number"`
 	CompanyStreet        string  `json:"company_street"`
+	CompanyStreet2       string  `json:"company_street2"`
 	CompanyZip           string  `json:"company_zip"`
 	CompanyCity          string  `json:"company_city"`
+	CompanyRegion        string  `json:"company_region"`
 	CompanyCountry       string  `json:"company_country"`
 	OrderNumber          string  `json:"order_number"`
 	InvoiceNumber        string  `json:"invoice_number"`

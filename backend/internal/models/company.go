@@ -2,16 +2,26 @@ package models
 
 import "time"
 
-// Company holds billing details used in invoices.
 type Company struct {
-	ID           uint      `json:"id" gorm:"primaryKey"`
-	Name         string    `json:"name"`
-	UID          string    `json:"uid"`
-	AddressLine1 string    `json:"address_line1"`
-	Zip          string    `json:"zip"`
-	City         string    `json:"city"`
-	Country      string    `json:"country"`
-	Payment      string    `json:"payment_condition"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID        uint64  `gorm:"primaryKey;autoIncrement"`
+	Name      string  `gorm:"column:name;not null"`
+	NameShort *string `gorm:"column:name_short"`
+
+	TaxNumber *string `gorm:"column:tax_number"`
+
+	AddressLine1 string  `gorm:"column:address_line1;not null"`
+	AddressLine2 *string `gorm:"column:address_line2"`
+	Zip          string  `gorm:"column:zip;not null"`
+	City         string  `gorm:"column:city;not null"`
+	Region       *string `gorm:"column:region"`
+	Country      string  `gorm:"column:country;not null"`
+
+	PaymentTerms *string `gorm:"column:payment_terms"`
+
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (Company) TableName() string {
+	return "companies"
 }
