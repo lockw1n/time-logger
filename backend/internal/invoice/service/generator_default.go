@@ -207,6 +207,7 @@ func buildGroups(
 		}
 
 		group.Rows = append(group.Rows, row)
+		group.HourlyRate = hourlyRate
 		group.TotalHours += hours
 		group.Subtotal += amount
 	}

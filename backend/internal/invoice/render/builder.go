@@ -155,6 +155,9 @@ func buildGroup(group domain.Group, currency string) Group {
 		TotalHours:          group.TotalHours,
 		TotalHoursFormatted: formatHours(group.TotalHours),
 
+		HourlyRate:          group.HourlyRate,
+		HourlyRateFormatted: formatHourlyRate(group.HourlyRate, currency),
+
 		Subtotal:          group.Subtotal,
 		SubtotalFormatted: formatMoney(group.Subtotal, currency),
 

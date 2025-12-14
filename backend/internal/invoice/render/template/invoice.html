@@ -194,9 +194,9 @@
     <tbody>
     {{range .Groups}}
     <tr>
-        <td class="cell">{{.Label}}</td>
+        <td class="cell">{{$.Company.NameShort}} - {{.Label}}</td>
         <td class="cell right">{{.TotalHoursFormatted}}</td>
-        <td class="cell right">EUR</td>
+        <td class="cell right">{{.HourlyRateFormatted}}</td>
         <td class="cell right"><strong>{{.SubtotalFormatted}}</strong></td>
     </tr>
     {{end}}

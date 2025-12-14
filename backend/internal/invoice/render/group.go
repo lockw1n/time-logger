@@ -6,6 +6,9 @@ type Group struct {
 	TotalHours          float64 `json:"totalHours"`
 	TotalHoursFormatted string  `json:"totalHoursFormatted"`
 
+	HourlyRate          float64 `json:"hourlyRate"`
+	HourlyRateFormatted string  `json:"hourlyRateFormatted"`
+
 	Subtotal          int64  `json:"subtotal"`
 	SubtotalFormatted string `json:"subtotalFormatted"`
 
