@@ -1,7 +1,9 @@
 package consultantassignment
 
 import (
+	"context"
 	"errors"
+	"time"
 
 	"github.com/lockw1n/time-logger/internal/models"
 	"gorm.io/gorm"
@@ -128,4 +130,33 @@ func (r *gormRepository) FindByCompany(companyID uint64) ([]models.ConsultantAss
 		Find(&list).Error
 
 	return list, err
+}
+
+func (r *gormRepository) FindActiveForPeriod(
+	ctx context.Context,
+	consultantID uint64,
+	companyID uint64,
+	start time.Time,
+	end time.Time,
+) ([]models.ConsultantAssignment, error) {
+
+	var assignments []models.ConsultantAssignment
+
+	err := r.db.
+		WithContext(ctx).
+		Where("consultant_id = ?", consultantID).
+		Where("company_id = ?", companyID).
+		Where(
+			"(start_date IS NULL OR start_date < ?) AND (end_date IS NULL OR end_date >= ?)",
+			end,   // start of next month
+			start, // start of month
+		).
+		Find(&assignments).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return assignments, nil
 }

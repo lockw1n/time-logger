@@ -9,6 +9,7 @@ import (
 	entryhandler "github.com/lockw1n/time-logger/internal/handlers/entry"
 	healthhandler "github.com/lockw1n/time-logger/internal/handlers/health"
 	timesheethandler "github.com/lockw1n/time-logger/internal/handlers/timesheet"
+	invoicehandler "github.com/lockw1n/time-logger/internal/invoice/handler"
 )
 
 func SetupRouter(container *app.Container) *gin.Engine {
@@ -24,15 +25,10 @@ func SetupRouter(container *app.Container) *gin.Engine {
 	consultantHandler := consultanthandler.NewHandler(container.ConsultantService)
 	timesheetHandler := timesheethandler.NewHandler(container.TimesheetService)
 	entryHandler := entryhandler.NewEntryHandler(container.EntryService)
+	invoiceHandler := invoicehandler.NewInvoice(container.InvoiceGenerator)
 
-	/*
-		invoiceHandler := handlers.NewInvoiceHandler(entryService, companyService, consultantService)*/
 	api := r.Group("/api")
 	{
-		/*
-			api.POST("/reports/invoice/pdf", invoiceHandler.GeneratePDF)
-		*/
-
 		api.GET("/company", companyHandler.GetCompany)
 		api.PUT("/company", companyHandler.UpsertCompany)
 
@@ -44,6 +40,8 @@ func SetupRouter(container *app.Container) *gin.Engine {
 		api.POST("/entries", entryHandler.Create)
 		api.PUT("/entries/:id", entryHandler.Update)
 		api.DELETE("/entries/:id", entryHandler.Delete)
+
+		api.POST("/invoices/monthly", invoiceHandler.GenerateMonthly)
 	}
 
 	return r

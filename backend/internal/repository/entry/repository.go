@@ -1,19 +1,23 @@
 package entry
 
 import (
+	"context"
 	"time"
 
 	"github.com/lockw1n/time-logger/internal/models"
 )
 
 type Repository interface {
-	Create(entry *models.Entry) (*models.Entry, error)
-	Update(entry *models.Entry) (*models.Entry, error)
-	Delete(id uint64) error
+	Create(ctx context.Context, entry *models.Entry) (*models.Entry, error)
+	Update(ctx context.Context, entry *models.Entry) (*models.Entry, error)
+	Delete(ctx context.Context, id uint64) error
 
-	FindByID(id uint64) (*models.Entry, error)
-	FindByCompany(companyID uint64) ([]models.Entry, error)
-	FindByConsultant(consultantID uint64) ([]models.Entry, error)
-	ListAll() ([]models.Entry, error)
-	FindWithDetails(consultantID uint64, companyID uint64, start time.Time, end time.Time) ([]models.Entry, error)
+	FindByID(ctx context.Context, id uint64) (*models.Entry, error)
+	FindForPeriodWithDetails(
+		ctx context.Context,
+		consultantID uint64,
+		companyID uint64,
+		start time.Time,
+		end time.Time,
+	) ([]models.Entry, error)
 }

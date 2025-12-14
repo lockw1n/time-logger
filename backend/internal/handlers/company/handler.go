@@ -78,7 +78,7 @@ func (h *Handler) GetCompany(c *gin.Context) {
 		return
 	}
 
-	company, err := h.service.Get(id)
+	company, err := h.service.Get(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch company"})
 		return
@@ -115,7 +115,7 @@ func (h *Handler) UpsertCompany(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	resp, err := h.service.Update(c.Request.Context(), id, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save company"})
 		return

@@ -1,6 +1,7 @@
 package consultant
 
 import (
+	"context"
 	"errors"
 
 	"github.com/lockw1n/time-logger/internal/models"
@@ -66,9 +67,11 @@ func (r *gormRepository) Delete(id uint64) error {
 	return nil
 }
 
-func (r *gormRepository) FindByID(id uint64) (*models.Consultant, error) {
+func (r *gormRepository) FindByID(ctx context.Context, id uint64) (*models.Consultant, error) {
 	var cons models.Consultant
-	err := r.db.First(&cons, id).Error
+	err := r.db.
+		WithContext(ctx).
+		First(&cons, id).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound

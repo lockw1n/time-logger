@@ -1,6 +1,7 @@
 package company
 
 import (
+	"context"
 	"errors"
 
 	companydto "github.com/lockw1n/time-logger/internal/dto/company"
@@ -28,8 +29,8 @@ func (s *service) Create(req companydto.Request) (*companydto.Response, error) {
 	return &out, nil
 }
 
-func (s *service) Update(id uint64, req companydto.Request) (*companydto.Response, error) {
-	existing, err := s.repo.FindByID(id)
+func (s *service) Update(ctx context.Context, id uint64, req companydto.Request) (*companydto.Response, error) {
+	existing, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, companyrepo.ErrNotFound) {
 			return nil, ErrNotFound
@@ -62,8 +63,8 @@ func (s *service) Delete(id uint64) error {
 	return nil
 }
 
-func (s *service) Get(id uint64) (*companydto.Response, error) {
-	model, err := s.repo.FindByID(id)
+func (s *service) Get(ctx context.Context, id uint64) (*companydto.Response, error) {
+	model, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, companyrepo.ErrNotFound) {
 			return nil, ErrNotFound

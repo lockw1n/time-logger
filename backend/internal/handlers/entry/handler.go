@@ -33,7 +33,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	resp, err := h.service.Create(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -59,7 +59,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	resp, err := h.service.Update(c.Request.Context(), id, req)
 	if err != nil {
 		if errors.Is(err, entryservice.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "entry not found"})
@@ -82,7 +82,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 
-	err := h.service.Delete(id)
+	err := h.service.Delete(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, entryservice.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "entry not found"})

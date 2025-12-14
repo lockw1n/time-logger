@@ -145,41 +145,37 @@
 <!-- HEADER -->
 <section class="header-grid">
     <div>
-        <div>{{.ConsultantName}}</div>
-        <div>{{.ConsultantAddress}}</div>
-        {{if .ConsultantAddress2}}<div>{{.ConsultantAddress2}}</div>{{end}}
-        <div>{{.ConsultantZip}} {{.ConsultantCity}}</div>
-        <div>{{.ConsultantCountry}}</div>
-        <div class="spacer-sm"></div>
-        <div>Tax number: {{.ConsultantTaxNumber}}</div>
+        <div>{{.Consultant.FullName}}</div>
+        <div>{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}}, {{end}}{{.Consultant.City}}, {{.Consultant.AddressLine1}}{{if .Consultant.AddressLine2}}, {{.Consultant.AddressLine2}}{{end}}</div>
+        <div>Tax number: {{.Consultant.TaxNumber}}</div>
     </div>
 
     <div class="spacer-sm"></div>
 
     <div>
-        <div>{{.CompanyName}}</div>
-        <div>Tax number: {{.CompanyTaxNumber}}</div>
-        <div>{{.CompanyStreet}} {{if .CompanyStreet2}}, {{.CompanyStreet2}}{{end}}</div>
-        <div>{{if .CompanyRegion}}{{.CompanyRegion}}, {{end}}{{.CompanyZip}} {{.CompanyCity}}</div>
-        <div>{{.CompanyCountry}}</div>
+        <div>{{.Company.Name}}</div>
+        <div>Tax number: {{.Company.TaxNumber}}</div>
+        <div>{{.Company.AddressLine1}} {{if .Company.AddressLine2}}, {{.Company.AddressLine2}}{{end}}</div>
+        <div>{{if .Company.Region}}{{.Company.Region}}, {{end}}{{.Company.Zip}} {{.Company.City}}</div>
+        <div>{{.Company.Country}}</div>
     </div>
 </section>
 
 <!-- ORDER + INVOICE INFO -->
 <div class="spacer-md text-16">
-    <div>Ordernumber: {{.OrderNumber}}</div>
-    <div>Invoice Number: {{.InvoiceNumber}}</div>
+    <div>Ordernumber: {{.Contract.OrderNumber}}</div>
+    <div>Invoice Number: {{.Invoice.Number}}</div>
 </div>
 
 <!-- DATE & INTRO -->
 <div class="spacer-lg">
-    <div class="center text-16">{{.InvoiceDate}}</div>
+    <div class="center text-16">{{.Invoice.IssuedAtFormatted}}</div>
     <div class="spacer-sm intro-text">
         According to our agreement I’m sending the following invoice for the time
-        period {{.PeriodStart}} to {{.PeriodEnd}}. Billing rate (hourly)
-        {{money .HourlyRate}}.
+        period {{.Period.Start}} to {{.Period.End}}. Billing rate (hourly)
+        {{.Contract.HourlyRateFormatted}}.
     </div>
-    <div class="spacer-md consultant-line text-16">Consultant Name: {{.ConsultantName}}</div>
+    <div class="spacer-md consultant-line text-16">Consultant Name: {{.Consultant.FullName}}</div>
 </div>
 
 <div class="divider"></div>
@@ -196,12 +192,12 @@
     </thead>
 
     <tbody>
-    {{range .Items}}
+    {{range .Groups}}
     <tr>
-        <td class="cell">{{.Description}}</td>
-        <td class="cell right">{{hours .Hours}}</td>
-        <td class="cell right">{{money .UnitPrice}}</td>
-        <td class="cell right"><strong>{{money .Amount}}</strong></td>
+        <td class="cell">{{.Label}}</td>
+        <td class="cell right">{{.TotalHoursFormatted}}</td>
+        <td class="cell right">EUR</td>
+        <td class="cell right"><strong>{{.SubtotalFormatted}}</strong></td>
     </tr>
     {{end}}
     <tr>
@@ -212,9 +208,9 @@
     </tr>
     <tr>
         <td class="cell"><strong>Total</strong></td>
-        <td class="cell right"><strong>{{hours .TotalHours}}</strong></td>
+        <td class="cell right"><strong>{{.Totals.TotalHoursFormatted}}</strong></td>
         <td class="cell right"></td>
-        <td class="cell right"><strong>{{money .TotalAmount}}</strong></td>
+        <td class="cell right"><strong>{{.Totals.SubtotalFormatted}}</strong></td>
     </tr>
     <tr class="table-spacer">
         <td></td>
@@ -229,12 +225,12 @@
 <div class="totals-block">
     <div class="totals-row">
         <span>Total hours</span>
-        <span class="right bold">{{hours .TotalHours}}</span>
+        <span class="right bold">{{.Totals.TotalHoursFormatted}}</span>
     </div>
 
     <div class="totals-row">
         <span>Total amount SUM</span>
-        <span class="right bold">{{money .TotalAmount}}</span>
+        <span class="right bold">{{.Totals.SubtotalFormatted}}</span>
     </div>
 </div>
 
@@ -242,18 +238,18 @@
 
 <!-- PAYMENT CONDITION -->
 <div class="spacer-md payment-line">
-    Payment Condition: {{.PaymentCondition}}
+    Payment Condition: {{.Company.PaymentTerms}}
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
     <div>Account details, IBAN, BIC:</div>
-    <div>Account beneficiary: {{.ConsultantName}}</div>
-    <div>Bank Name: {{.BankName}}</div>
-    <div>Bank Address: {{.BankAddress}}</div>
-    <div>IBAN/Account number: {{.IBAN}}</div>
-    <div>SWIFT/BIC Code: {{.BIC}}</div>
-    <div>Bank Country: {{.BankCountry}}</div>
+    <div>Account beneficiary: {{.Consultant.FullName}}</div>
+    <div>Bank Name: {{.Consultant.BankName}}</div>
+    <div>Bank Address: {{.Consultant.BankAddress}}</div>
+    <div>IBAN/Account number: {{.Consultant.BankIban}}</div>
+    <div>SWIFT/BIC Code: {{.Consultant.BankBic}}</div>
+    <div>Bank Country: {{.Consultant.BankCountry}}</div>
 </div>
 
 </body>

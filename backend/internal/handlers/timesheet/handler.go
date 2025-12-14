@@ -26,7 +26,7 @@ func (h *Handler) GetTimesheet(c *gin.Context) {
 		return
 	}
 
-	report, err := h.service.GenerateReport(req)
+	report, err := h.service.GenerateReport(c.Request.Context(), req)
 	if err != nil {
 		switch {
 		case errors.Is(err, timesheet.ErrMissingConsultantID),

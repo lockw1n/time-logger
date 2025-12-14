@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"context"
 	"errors"
 
 	entrydto "github.com/lockw1n/time-logger/internal/dto/entry"
@@ -30,7 +31,7 @@ func NewService(
 	}
 }
 
-func (s *service) Create(req entrydto.Request) (*entrydto.Response, error) {
+func (s *service) Create(ctx context.Context, req entrydto.Request) (*entrydto.Response, error) {
 	if err := validateDurationMinutesRange(req.DurationMinutes); err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (s *service) Create(req entrydto.Request) (*entrydto.Response, error) {
 	model.CurrencySnapshot = &assignment.Currency
 	model.TicketID = &ticket.ID
 
-	created, err := s.entryRepo.Create(model)
+	created, err := s.entryRepo.Create(ctx, model)
 
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func (s *service) Create(req entrydto.Request) (*entrydto.Response, error) {
 	return &out, nil
 }
 
-func (s *service) Update(id uint64, req entrydto.Request) (*entrydto.Response, error) {
+func (s *service) Update(ctx context.Context, id uint64, req entrydto.Request) (*entrydto.Response, error) {
 	if err := validateDurationMinutesRange(req.DurationMinutes); err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func (s *service) Update(id uint64, req entrydto.Request) (*entrydto.Response, e
 		return nil, err
 	}
 
-	existing, err := s.entryRepo.FindByID(id)
+	existing, err := s.entryRepo.FindByID(ctx, id)
 
 	if err != nil {
 		if errors.Is(err, entryrepo.ErrNotFound) {
@@ -110,7 +111,7 @@ func (s *service) Update(id uint64, req entrydto.Request) (*entrydto.Response, e
 	}
 
 	model.ID = existing.ID
-	updated, err := s.entryRepo.Update(model)
+	updated, err := s.entryRepo.Update(ctx, model)
 
 	if err != nil {
 		return nil, err
@@ -120,8 +121,8 @@ func (s *service) Update(id uint64, req entrydto.Request) (*entrydto.Response, e
 	return &out, nil
 }
 
-func (s *service) Delete(id uint64) error {
-	err := s.entryRepo.Delete(id)
+func (s *service) Delete(ctx context.Context, id uint64) error {
+	err := s.entryRepo.Delete(ctx, id)
 	if err != nil {
 		if errors.Is(err, entryrepo.ErrNotFound) {
 			return ErrNotFound
@@ -129,56 +130,4 @@ func (s *service) Delete(id uint64) error {
 		return err
 	}
 	return nil
-}
-
-func (s *service) Get(id uint64) (*entrydto.Response, error) {
-	model, err := s.entryRepo.FindByID(id)
-	if err != nil {
-		if errors.Is(err, entryrepo.ErrNotFound) {
-			return nil, ErrNotFound
-		}
-		return nil, err
-	}
-
-	out := entrymapper.ToResponse(model)
-	return &out, nil
-}
-
-func (s *service) ListByCompany(companyID uint64) ([]entrydto.Response, error) {
-	list, err := s.entryRepo.FindByCompany(companyID)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]entrydto.Response, len(list))
-	for i := range list {
-		result[i] = entrymapper.ToResponse(&list[i])
-	}
-	return result, nil
-}
-
-func (s *service) ListByConsultant(consultantID uint64) ([]entrydto.Response, error) {
-	list, err := s.entryRepo.FindByConsultant(consultantID)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]entrydto.Response, len(list))
-	for i := range list {
-		result[i] = entrymapper.ToResponse(&list[i])
-	}
-	return result, nil
-}
-
-func (s *service) ListAll() ([]entrydto.Response, error) {
-	list, err := s.entryRepo.ListAll()
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]entrydto.Response, len(list))
-	for i := range list {
-		result[i] = entrymapper.ToResponse(&list[i])
-	}
-	return result, nil
 }

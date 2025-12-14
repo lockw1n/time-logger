@@ -1,6 +1,7 @@
 package consultant
 
 import (
+	"context"
 	"errors"
 
 	consultantdto "github.com/lockw1n/time-logger/internal/dto/consultant"
@@ -32,8 +33,8 @@ func (s *service) Create(req consultantdto.Request) (*consultantdto.Response, er
 
 /* ------------------ UPDATE ------------------ */
 
-func (s *service) Update(id uint64, req consultantdto.Request) (*consultantdto.Response, error) {
-	existing, err := s.repo.FindByID(id)
+func (s *service) Update(ctx context.Context, id uint64, req consultantdto.Request) (*consultantdto.Response, error) {
+	existing, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, consultantrepo.ErrNotFound) {
 			return nil, ErrNotFound
@@ -70,8 +71,8 @@ func (s *service) Delete(id uint64) error {
 
 /* ------------------ GET ------------------ */
 
-func (s *service) Get(id uint64) (*consultantdto.Response, error) {
-	consultant, err := s.repo.FindByID(id)
+func (s *service) Get(ctx context.Context, id uint64) (*consultantdto.Response, error) {
+	consultant, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, consultantrepo.ErrNotFound) {
 			return nil, ErrNotFound

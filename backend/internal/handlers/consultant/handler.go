@@ -92,7 +92,7 @@ func (h *Handler) GetConsultant(c *gin.Context) {
 		return
 	}
 
-	consultant, err := h.service.Get(id)
+	consultant, err := h.service.Get(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch consultant"})
 		return
@@ -129,7 +129,7 @@ func (h *Handler) UpsertConsultant(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	resp, err := h.service.Update(c.Request.Context(), id, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save consultant"})
 		return

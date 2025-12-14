@@ -1,6 +1,8 @@
 package timesheet
 
 import (
+	"context"
+
 	timesheetdto "github.com/lockw1n/time-logger/internal/dto/timesheet"
 	entryrepo "github.com/lockw1n/time-logger/internal/repository/entry"
 )
@@ -13,7 +15,7 @@ func NewService(entryRepo entryrepo.Repository) Service {
 	return &service{entryRepo: entryRepo}
 }
 
-func (s *service) GenerateReport(req timesheetdto.Request) (*timesheetdto.Report, error) {
+func (s *service) GenerateReport(ctx context.Context, req timesheetdto.Request) (*timesheetdto.Report, error) {
 	if err := validateReportScope(req.ConsultantID, req.CompanyID); err != nil {
 		return nil, err
 	}
@@ -32,7 +34,7 @@ func (s *service) GenerateReport(req timesheetdto.Request) (*timesheetdto.Report
 		return nil, err
 	}
 
-	entries, err := s.entryRepo.FindWithDetails(req.ConsultantID, req.CompanyID, start, end)
+	entries, err := s.entryRepo.FindForPeriodWithDetails(ctx, req.ConsultantID, req.CompanyID, start, end)
 	if err != nil {
 		return nil, err
 	}
