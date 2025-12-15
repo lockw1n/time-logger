@@ -40,10 +40,6 @@
             text-align: center;
         }
 
-        .text-14 {
-            font-size: 14pt;
-        }
-
         .text-16 {
             font-size: 16pt;
         }
@@ -137,6 +133,99 @@
         .clear {
             clear: both;
         }
+
+        /* ===== PAGE 2 / DETAILS (STABLE) ===== */
+        .page-break {
+            page-break-before: always;
+        }
+
+        .project-section {
+            margin-bottom: 16px;
+        }
+
+        .details-table {
+            width: 100% !important; /* keep full width */
+            border-collapse: collapse;
+            border: 2px solid #000;
+            table-layout: fixed; /* deterministic */
+            font-size: 13pt;
+        }
+
+        .details-table th, .details-table td {
+            border: 1px solid #bfbfbf;
+            padding: 4px 6px;
+            line-height: 1.25;
+        }
+
+        .details-table tr {
+            page-break-inside: avoid;
+        }
+
+        /* Label bar */
+        .project-header-row th {
+            background: #e08b4f;
+            color: #000;
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #000;
+            padding: 8px 6px;
+        }
+
+        /* Header row */
+        .details-head th {
+            text-align: center;
+            font-weight: bold;
+            background: #fff;
+        }
+
+        /* ===== COLUMN DISTRIBUTION (Qt WebKit friendly) ===== */ /* Date tight */
+        .details-table col.col-date {
+            width: 120px;
+        }
+
+        /* Hours tight */
+        .details-table col.col-hours {
+            width: 100px;
+        }
+
+        /* Notes takes ALL remaining width */
+        .details-table col.col-notes {
+            width: auto;
+        }
+
+        /* Safety: never wrap date */
+        .details-date {
+            white-space: nowrap;
+        }
+
+        /* Hours alignment */
+        .details-hours {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* Subtotal row */
+        .subtotal-row td {
+            font-weight: bold;
+            border-top: 2px solid #000;
+        }
+
+        .subtotal-row td:last-child {
+            text-align: right;
+        }
+
+        /* Grand total */
+        .grand-total {
+            margin-top: 24px;
+            padding-top: 8px;
+            border-top: 4px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 16pt; /* same as label */
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -146,7 +235,10 @@
 <section class="header-grid">
     <div>
         <div>{{.Consultant.FullName}}</div>
-        <div>{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}}, {{end}}{{.Consultant.City}}, {{.Consultant.AddressLine1}}{{if .Consultant.AddressLine2}}, {{.Consultant.AddressLine2}}{{end}}</div>
+        <div>{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}},
+            {{end}}{{.Consultant.City}}, {{.Consultant.AddressLine1}}{{if .Consultant.AddressLine2}},
+            {{.Consultant.AddressLine2}}{{end}}
+        </div>
         <div>Tax number: {{.Consultant.TaxNumber}}</div>
     </div>
 
@@ -250,6 +342,51 @@
     <div>IBAN/Account number: {{.Consultant.BankIban}}</div>
     <div>SWIFT/BIC Code: {{.Consultant.BankBic}}</div>
     <div>Bank Country: {{.Consultant.BankCountry}}</div>
+</div>
+
+<div class="page-break"></div>
+
+{{range .Groups}}
+    {{if gt .TotalHours 0.0}}
+        <div class="project-section">
+            <table class="details-table">
+                <colgroup>
+                    <col class="col-date">
+                    <col class="col-notes">
+                    <col class="col-hours">
+                </colgroup>
+
+                <thead>
+                    <tr class="project-header-row">
+                        <th colspan="3">{{$.Company.NameShort}} – {{.Label}}</th>
+                    </tr>
+                    <tr class="details-head">
+                        <th>Date</th>
+                        <th>Notes</th>
+                        <th>Hours</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{range .Rows}}
+                        <tr>
+                            <td class="details-date">{{.DateFormatted}}</td>
+                            <td class="details-notes">{{.TicketCode}}</td>
+                            <td class="details-hours">{{.HoursFormatted}}</td>
+                        </tr>
+                    {{end}}
+                    <tr class="subtotal-row">
+                        <td colspan="2">Subtotal {{$.Company.NameShort}} – {{.Label}}</td>
+                        <td class="details-hours">{{.TotalHoursFormatted}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {{end}}
+{{end}}
+<div class="grand-total">
+    <span>Total over all projects and tasks</span>
+    <span>{{.Totals.TotalHoursFormatted}}</span>
 </div>
 
 </body>
