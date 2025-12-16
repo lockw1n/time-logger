@@ -22,7 +22,7 @@ insert_final_newline = true
 # YAML, JSON, and configuration files
 [*.{yml,yaml,json}]
 indent_style = space
-indent_size = 2
+indent_size = 4
 
 # Markdown files — keep intentional trailing spaces
 [*.md]
@@ -36,7 +36,7 @@ indent_style = space
 indent_size = 4
 
 # Frontend files (React / JS / JSX / TS)
-[*.{js,jsx,ts,tsx,css,scss,html}]
+[*.{js,jsx,mjs,ts,tsx,css,scss,html}]
 indent_style = space
 indent_size = 4
 

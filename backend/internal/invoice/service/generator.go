@@ -3,12 +3,9 @@ package service
 import (
 	"context"
 
-	"github.com/lockw1n/time-logger/internal/invoice/domain"
+	"github.com/lockw1n/time-logger/internal/invoice/render"
 )
 
 type InvoiceGenerator interface {
-	GenerateMonthly(
-		ctx context.Context,
-		cmd GenerateMonthlyInvoiceCommand,
-	) (*domain.Invoice, error)
+	GenerateMonthlyPDF(ctx context.Context, cmd GenerateMonthlyInvoiceCommand) ([]byte, render.Invoice, error)
 }

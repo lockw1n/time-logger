@@ -1,0 +1,13 @@
+{
+  "name": "pdf-renderer",
+  "private": true,
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "playwright": "^1.49.0"
+  }
+}

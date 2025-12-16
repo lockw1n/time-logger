@@ -32,21 +32,10 @@ func (h *Invoice) GenerateMonthly(c *gin.Context) {
 		CompanyID:    req.CompanyID,
 	}
 
-	invoice, err := h.generator.GenerateMonthly(c.Request.Context(), cmd)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	renderInvoice := render.BuildInvoice(*invoice)
-
-	htmlBytes, err := render.HTML(renderInvoice)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	pdfBytes, err := render.PDF(htmlBytes)
+	pdfBytes, renderInvoice, err := h.generator.GenerateMonthlyPDF(
+		c.Request.Context(),
+		cmd,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

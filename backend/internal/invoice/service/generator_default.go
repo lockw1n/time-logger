@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/lockw1n/time-logger/internal/invoice/domain"
+	"github.com/lockw1n/time-logger/internal/invoice/render"
 	"github.com/lockw1n/time-logger/internal/models"
+	"github.com/lockw1n/time-logger/internal/pdf"
 	companyrepo "github.com/lockw1n/time-logger/internal/repository/company"
 	consultantrepo "github.com/lockw1n/time-logger/internal/repository/consultant"
 	assignmentrepo "github.com/lockw1n/time-logger/internal/repository/consultantassignment"
@@ -18,6 +20,7 @@ type invoiceGenerator struct {
 	companyRepo    companyrepo.Repository
 	consultantRepo consultantrepo.Repository
 	entryRepo      entryrepo.Repository
+	pdfRenderer    pdf.Renderer
 	clock          Clock
 }
 
@@ -26,6 +29,7 @@ func NewInvoiceGenerator(
 	companyRepo companyrepo.Repository,
 	consultantRepo consultantrepo.Repository,
 	entryRepo entryrepo.Repository,
+	pdfRenderer pdf.Renderer,
 	clock Clock,
 ) InvoiceGenerator {
 	return &invoiceGenerator{
@@ -33,15 +37,40 @@ func NewInvoiceGenerator(
 		companyRepo:    companyRepo,
 		consultantRepo: consultantRepo,
 		entryRepo:      entryRepo,
+		pdfRenderer:    pdfRenderer,
 		clock:          clock,
 	}
 }
 
-func (g *invoiceGenerator) GenerateMonthly(
+func (g *invoiceGenerator) GenerateMonthlyPDF(
+	ctx context.Context,
+	cmd GenerateMonthlyInvoiceCommand,
+) ([]byte, render.Invoice, error) {
+
+	invoice, err := g.generateMonthly(ctx, cmd)
+	if err != nil {
+		return nil, render.Invoice{}, err
+	}
+
+	renderInvoice := render.BuildInvoice(*invoice)
+
+	html, err := render.HTML(renderInvoice)
+	if err != nil {
+		return nil, render.Invoice{}, err
+	}
+
+	pdfBytes, err := g.pdfRenderer.RenderHTML(ctx, string(html))
+	if err != nil {
+		return nil, render.Invoice{}, err
+	}
+
+	return pdfBytes, renderInvoice, nil
+}
+
+func (g *invoiceGenerator) generateMonthly(
 	ctx context.Context,
 	cmd GenerateMonthlyInvoiceCommand,
 ) (*domain.Invoice, error) {
-
 	// 1. Parse month → period
 	period, err := buildPeriod(cmd.Month)
 	if err != nil {

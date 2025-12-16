@@ -11,11 +11,11 @@
 
         body {
             margin: 0;
-            padding: 2cm;
+            padding: 1cm;
             font-family: Arial, sans-serif;
-            font-size: 14pt;
+            font-size: 12pt;
             color: #000;
-            line-height: 1.4;
+            line-height: 1.2;
         }
 
         .header-grid {
@@ -40,13 +40,19 @@
             text-align: center;
         }
 
-        .text-16 {
-            font-size: 16pt;
+        .text-14 {
+            font-size: 14pt;
+        }
+
+        .single-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .intro-text {
             text-indent: 32px;
-            text-align: left;
+            text-align: justify;
         }
 
         .consultant-line {
@@ -54,14 +60,14 @@
         }
 
         .divider {
-            margin: 28px 0 28px;
+            margin: 24px 0 24px;
             border-top: 1px solid #000;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14pt;
+            font-size: 12pt;
         }
 
         .table-header {
@@ -101,7 +107,7 @@
         }
 
         .totals-block {
-            margin-top: 40px;
+            margin-top: 30px;
             width: 100%;
             float: none;
         }
@@ -115,7 +121,7 @@
 
         .footer {
             margin-top: 36px;
-            font-size: 14pt;
+            font-size: 12pt;
             line-height: 1.4;
         }
 
@@ -148,7 +154,7 @@
             border-collapse: collapse;
             border: 2px solid #000;
             table-layout: fixed; /* deterministic */
-            font-size: 13pt;
+            font-size: 12pt;
         }
 
         .details-table th, .details-table td {
@@ -165,7 +171,7 @@
         .project-header-row th {
             background: #e08b4f;
             color: #000;
-            font-size: 16pt;
+            font-size: 14pt;
             font-weight: bold;
             text-align: center;
             border: 2px solid #000;
@@ -223,7 +229,7 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            font-size: 16pt; /* same as label */
+            font-size: 14pt; /* same as label */
             font-weight: bold;
         }
     </style>
@@ -235,7 +241,7 @@
 <section class="header-grid">
     <div>
         <div>{{.Consultant.FullName}}</div>
-        <div>{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}},
+        <div class="single-line">{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}},
             {{end}}{{.Consultant.City}}, {{.Consultant.AddressLine1}}{{if .Consultant.AddressLine2}},
             {{.Consultant.AddressLine2}}{{end}}
         </div>
@@ -254,20 +260,20 @@
 </section>
 
 <!-- ORDER + INVOICE INFO -->
-<div class="spacer-md text-16">
+<div class="spacer-md text-14">
     <div>Ordernumber: {{.Contract.OrderNumber}}</div>
     <div>Invoice Number: {{.Invoice.Number}}</div>
 </div>
 
 <!-- DATE & INTRO -->
 <div class="spacer-lg">
-    <div class="center text-16">{{.Invoice.IssuedAtFormatted}}</div>
+    <div class="center text-14">{{.Invoice.IssuedAtFormatted}}</div>
     <div class="spacer-sm intro-text">
         According to our agreement I’m sending the following invoice for the time
         period {{.Period.Start}} to {{.Period.End}}. Billing rate (hourly)
         {{.Contract.HourlyRateFormatted}}.
     </div>
-    <div class="spacer-md consultant-line text-16">Consultant Name: {{.Consultant.FullName}}</div>
+    <div class="spacer-md consultant-line text-14">Consultant Name: {{.Consultant.FullName}}</div>
 </div>
 
 <div class="divider"></div>

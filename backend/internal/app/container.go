@@ -1,6 +1,9 @@
 package app
 
 import (
+	"os"
+
+	"github.com/lockw1n/time-logger/internal/pdf"
 	"gorm.io/gorm"
 
 	invoiceservice "github.com/lockw1n/time-logger/internal/invoice/service"
@@ -39,6 +42,10 @@ func NewContainer(db *gorm.DB) *Container {
 	entryRepo := entryrepo.NewGormRepository(db)
 	labelRepo := labelrepo.NewGormRepository(db)
 	ticketRepo := ticketrepo.NewGormRepository(db)
+	pdfRenderer := pdf.NewHTTPRenderer(
+		os.Getenv("PDF_RENDERER_URL"),
+		os.Getenv("PDF_RENDERER_TOKEN"),
+	)
 	clock := invoiceservice.NewClock()
 
 	return &Container{
@@ -50,6 +57,13 @@ func NewContainer(db *gorm.DB) *Container {
 		LabelService:                labelservice.NewService(labelRepo),
 		TicketService:               ticketservice.NewService(ticketRepo),
 		TimesheetService:            timesheetservice.NewService(entryRepo),
-		InvoiceGenerator:            invoiceservice.NewInvoiceGenerator(assignmentRepo, companyRepo, consultantRepo, entryRepo, clock),
+		InvoiceGenerator: invoiceservice.NewInvoiceGenerator(
+			assignmentRepo,
+			companyRepo,
+			consultantRepo,
+			entryRepo,
+			pdfRenderer,
+			clock,
+		),
 	}
 }

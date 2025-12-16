@@ -24,19 +24,12 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o timelogger-migrate ./cmd/m
 # ==============================
 # Stage 2 — runtime
 # ==============================
-FROM debian:bookworm-slim AS runtime
+FROM alpine:3.20 AS runtime
 
 WORKDIR /app
 
-# Install wkhtmltopdf + required fonts
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-       ca-certificates \
-       curl \
-       wkhtmltopdf \
-       fonts-dejavu \
-       fontconfig \
-    && rm -rf /var/lib/apt/lists/*
+# Install only what a static Go binary actually needs
+RUN apk add --no-cache ca-certificates
 
 # Copy both binaries from builder
 COPY --from=builder /app/timelogger-server .
