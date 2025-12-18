@@ -59,7 +59,12 @@ func (g *invoiceGenerator) GenerateMonthlyPDF(
 		return nil, render.Invoice{}, err
 	}
 
-	pdfBytes, err := g.pdfRenderer.RenderHTML(ctx, string(html))
+	footerHtml, err := render.FooterHTML()
+	if err != nil {
+		return nil, render.Invoice{}, err
+	}
+
+	pdfBytes, err := g.pdfRenderer.RenderHTML(ctx, string(html), string(footerHtml))
 	if err != nil {
 		return nil, render.Invoice{}, err
 	}

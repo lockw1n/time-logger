@@ -18,8 +18,9 @@ type HTTPRenderer struct {
 }
 
 type renderRequest struct {
-	HTML      string `json:"html"`
-	TimeoutMs int    `json:"timeoutMs,omitempty"`
+	HTML       string `json:"html"`
+	FooterHTML string `json:"footerHtml"`
+	TimeoutMs  int    `json:"timeoutMs,omitempty"`
 }
 
 func NewHTTPRenderer(baseURL, token string) *HTTPRenderer {
@@ -42,14 +43,15 @@ func NewHTTPRenderer(baseURL, token string) *HTTPRenderer {
 	}
 }
 
-func (r *HTTPRenderer) RenderHTML(ctx context.Context, html string) ([]byte, error) {
+func (r *HTTPRenderer) RenderHTML(ctx context.Context, html string, footerHTML string) ([]byte, error) {
 	if html == "" {
 		return nil, ErrEmptyHTML
 	}
 
 	payload := renderRequest{
-		HTML:      html,
-		TimeoutMs: 30_000,
+		HTML:       html,
+		FooterHTML: footerHTML,
+		TimeoutMs:  30_000,
 	}
 
 	body, err := json.Marshal(payload)

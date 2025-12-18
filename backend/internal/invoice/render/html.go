@@ -7,6 +7,7 @@ import (
 )
 
 //go:embed template/invoice.html
+//go:embed template/footer.html
 var templates embed.FS
 
 func HTML(invoice Invoice) ([]byte, error) {
@@ -20,6 +21,23 @@ func HTML(invoice Invoice) ([]byte, error) {
 
 	var buf bytes.Buffer
 	if err := tpl.Execute(&buf, invoice); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func FooterHTML() ([]byte, error) {
+	tpl, err := template.ParseFS(
+		templates,
+		"template/footer.html",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	if err := tpl.Execute(&buf, nil); err != nil {
 		return nil, err
 	}
 

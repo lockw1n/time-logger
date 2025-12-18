@@ -32,7 +32,7 @@ app.post("/render", async (req, res) => {
         }
     }
 
-    const {html, baseUrl, pdf, timeoutMs} = req.body ?? {};
+    const {html, footerHtml, baseUrl, pdf, timeoutMs} = req.body ?? {};
     if (typeof html !== "string" || html.trim().length === 0) {
         return res.status(400).json({error: "Field 'html' is required (non-empty string)."});
     }
@@ -43,10 +43,20 @@ app.post("/render", async (req, res) => {
         format: "A4",
         printBackground: true,
         preferCSSPageSize: true,
-        margin: {top: "10mm", right: "10mm", bottom: "12mm", left: "10mm"},
-        displayHeaderFooter: false,
+        margin: {
+            top: "10mm",
+            right: "10mm",
+            bottom: footerHtml ? "20mm" : "10mm",
+            left: "10mm"
+        },
         ...((pdf && typeof pdf === "object") ? pdf : {})
     };
+
+    if (typeof footerHtml === "string" && footerHtml.trim() !== "") {
+        pdfOptions.displayHeaderFooter = true;
+        pdfOptions.headerTemplate = "<div></div>";
+        pdfOptions.footerTemplate = footerHtml;
+    }
 
     const browser = await browserPromise;
     const context = await browser.newContext();
@@ -97,7 +107,7 @@ app.post("/render", async (req, res) => {
             }
         });
 
-        const buffer = await page.pdf({...pdfOptions, timeout: effectiveTimeout});
+        const buffer = await page.pdf({...pdfOptions});
 
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", 'inline; filename="document.pdf"');
