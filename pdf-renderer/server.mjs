@@ -119,8 +119,7 @@ app.post("/render", async (req, res) => {
             message: e?.message ?? String(e)
         });
     } finally {
-        await context.close().catch(() => {
-        });
+        await context.close().catch(() => {});
     }
 });
 

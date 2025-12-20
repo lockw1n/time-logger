@@ -25,7 +25,7 @@ func SetupRouter(container *app.Container) *gin.Engine {
 	consultantHandler := consultanthandler.NewHandler(container.ConsultantService)
 	timesheetHandler := timesheethandler.NewHandler(container.TimesheetService)
 	entryHandler := entryhandler.NewEntryHandler(container.EntryService)
-	invoiceHandler := invoicehandler.NewInvoice(container.InvoiceGenerator)
+	invoiceHandler := invoicehandler.NewInvoice(container.InvoiceGenerator, container.PdfRenderer, container.ExcelRenderer)
 
 	api := r.Group("/api")
 	{

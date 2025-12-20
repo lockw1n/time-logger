@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { generateMonthlyInvoicePdf } from "../api/invoices";
+import { generateMonthlyInvoiceExcel, generateMonthlyInvoicePdf } from "../api/invoices";
 
 const toMonthInput = (date) => {
     const d = new Date(date);
@@ -21,7 +21,8 @@ const defaultForm = {
 
 export default function InvoiceGenerator() {
     const [form, setForm] = useState(defaultForm);
-    const [loading, setLoading] = useState(false);
+    const [loadingPdf, setLoadingPdf] = useState(false);
+    const [loadingExcel, setLoadingExcel] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
@@ -32,8 +33,8 @@ export default function InvoiceGenerator() {
         setSuccess("");
     };
 
-    const handleDownload = async () => {
-        setLoading(true);
+    const handleDownloadPdf = async () => {
+        setLoadingPdf(true);
         setError("");
         setSuccess("");
         try {
@@ -59,7 +60,28 @@ export default function InvoiceGenerator() {
             console.error("invoice pdf generation failed", err);
             setError("Failed to generate invoice. Check required fields and try again.");
         } finally {
-            setLoading(false);
+            setLoadingPdf(false);
+        }
+    };
+
+    const handleDownloadExcel = async () => {
+        setLoadingExcel(true);
+        setError("");
+        setSuccess("");
+        try {
+            const { blob, filename } = await generateMonthlyInvoiceExcel({ month: form.month });
+            const file = new File([blob], filename, {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+            const url = window.URL.createObjectURL(file);
+            triggerDownload(url, filename);
+            setTimeout(() => window.URL.revokeObjectURL(url), 5_000);
+            setSuccess("Invoice Excel download started.");
+        } catch (err) {
+            console.error("invoice excel generation failed", err);
+            setError("Failed to generate invoice. Check required fields and try again.");
+        } finally {
+            setLoadingExcel(false);
         }
     };
 
@@ -81,13 +103,22 @@ export default function InvoiceGenerator() {
                     <h2 className="text-xl font-semibold text-gray-100">Invoice</h2>
                     <p className="text-sm text-gray-400">Generate a PDF for a selected month.</p>
                 </div>
-                <button
-                    onClick={handleDownload}
-                    disabled={loading}
-                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium shadow-sm transition"
-                >
-                    {loading ? "Generating…" : "Generate PDF"}
-                </button>
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        onClick={handleDownloadPdf}
+                        disabled={loadingPdf || loadingExcel}
+                        className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium shadow-sm transition"
+                    >
+                        {loadingPdf ? "Generating…" : "Generate PDF"}
+                    </button>
+                    <button
+                        onClick={handleDownloadExcel}
+                        disabled={loadingPdf || loadingExcel}
+                        className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-medium shadow-sm transition"
+                    >
+                        {loadingExcel ? "Generating…" : "Generate Excel"}
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 text-sm max-w-md">
