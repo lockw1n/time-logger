@@ -20,7 +20,7 @@ import (
 	entryservice "github.com/lockw1n/time-logger/internal/service/entry"
 	labelservice "github.com/lockw1n/time-logger/internal/service/label"
 	ticketservice "github.com/lockw1n/time-logger/internal/service/ticket"
-	timesheetservice "github.com/lockw1n/time-logger/internal/service/timesheet"
+	timesheetservice "github.com/lockw1n/time-logger/internal/timesheet/service"
 )
 
 type Container struct {
@@ -32,7 +32,7 @@ type Container struct {
 	EntryService                entryservice.Service
 	LabelService                labelservice.Service
 	TicketService               ticketservice.Service
-	TimesheetService            timesheetservice.Service
+	TimesheetService            timesheetservice.Timesheet
 	InvoiceGenerator            invoiceservice.InvoiceGenerator
 	PdfRenderer                 pdf.Renderer
 	ExcelRenderer               *excel.Renderer
@@ -55,7 +55,7 @@ func NewContainer(db *gorm.DB) *Container {
 		EntryService:                entryservice.NewService(entryRepo, assignmentRepo, ticketRepo),
 		LabelService:                labelservice.NewService(labelRepo),
 		TicketService:               ticketservice.NewService(ticketRepo),
-		TimesheetService:            timesheetservice.NewService(entryRepo),
+		TimesheetService:            timesheetservice.NewTimesheet(entryRepo),
 		InvoiceGenerator:            invoiceservice.NewInvoiceGenerator(assignmentRepo, companyRepo, consultantRepo, entryRepo, clock),
 		PdfRenderer:                 pdf.NewHTTPRenderer(os.Getenv("PDF_RENDERER_URL"), os.Getenv("PDF_RENDERER_TOKEN")),
 		ExcelRenderer:               excel.NewRenderer(),

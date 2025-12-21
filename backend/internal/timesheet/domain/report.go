@@ -1,4 +1,4 @@
-package timesheet
+package domain
 
 type Report struct {
 	ConsultantID uint64      `json:"consultant_id"`

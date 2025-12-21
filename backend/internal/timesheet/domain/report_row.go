@@ -1,4 +1,4 @@
-package timesheet
+package domain
 
 import (
 	entrydto "github.com/lockw1n/time-logger/internal/dto/entry"

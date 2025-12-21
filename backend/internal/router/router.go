@@ -7,9 +7,9 @@ import (
 	companyhandler "github.com/lockw1n/time-logger/internal/handlers/company"
 	consultanthandler "github.com/lockw1n/time-logger/internal/handlers/consultant"
 	entryhandler "github.com/lockw1n/time-logger/internal/handlers/entry"
-	healthhandler "github.com/lockw1n/time-logger/internal/handlers/health"
-	timesheethandler "github.com/lockw1n/time-logger/internal/handlers/timesheet"
+	"github.com/lockw1n/time-logger/internal/health"
 	invoicehandler "github.com/lockw1n/time-logger/internal/invoice/handler"
+	timesheethandler "github.com/lockw1n/time-logger/internal/timesheet/handler"
 )
 
 func SetupRouter(container *app.Container) *gin.Engine {
@@ -17,13 +17,13 @@ func SetupRouter(container *app.Container) *gin.Engine {
 	r := gin.Default()
 
 	// Health endpoints
-	healthHandler := healthhandler.NewHandler(container.DB)
+	healthHandler := health.NewHandler(container.DB)
 	r.GET("/health", healthHandler.Check)
 	r.HEAD("/health", healthHandler.Check)
 
 	companyHandler := companyhandler.NewHandler(container.CompanyService)
 	consultantHandler := consultanthandler.NewHandler(container.ConsultantService)
-	timesheetHandler := timesheethandler.NewHandler(container.TimesheetService)
+	timesheetHandler := timesheethandler.NewTimesheet(container.TimesheetService)
 	entryHandler := entryhandler.NewEntryHandler(container.EntryService)
 	invoiceHandler := invoicehandler.NewInvoice(container.InvoiceGenerator, container.PdfRenderer, container.ExcelRenderer)
 

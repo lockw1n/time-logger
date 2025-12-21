@@ -1,13 +1,13 @@
-package timesheet
+package service
 
 import (
 	"sort"
 
-	timesheetdto "github.com/lockw1n/time-logger/internal/dto/timesheet"
 	entrymapper "github.com/lockw1n/time-logger/internal/mapper/entry"
 	labelmapper "github.com/lockw1n/time-logger/internal/mapper/label"
 	ticketmapper "github.com/lockw1n/time-logger/internal/mapper/ticket"
 	"github.com/lockw1n/time-logger/internal/models"
+	"github.com/lockw1n/time-logger/internal/timesheet/domain"
 )
 
 type groupKey struct {
@@ -15,8 +15,8 @@ type groupKey struct {
 	labelID  uint64
 }
 
-func groupEntries(entries []models.Entry) []timesheetdto.ReportRow {
-	groups := map[groupKey]*timesheetdto.ReportRow{}
+func groupEntries(entries []models.Entry) []domain.ReportRow {
+	groups := map[groupKey]*domain.ReportRow{}
 
 	for _, e := range entries {
 		var ticketID uint64
@@ -33,7 +33,7 @@ func groupEntries(entries []models.Entry) []timesheetdto.ReportRow {
 
 		row, exists := groups[key]
 		if !exists {
-			row = &timesheetdto.ReportRow{
+			row = &domain.ReportRow{
 				Ticket: ticketmapper.ToResponse(e.Ticket),
 				Label:  labelmapper.ToResponse(e.Label),
 			}
@@ -44,7 +44,7 @@ func groupEntries(entries []models.Entry) []timesheetdto.ReportRow {
 		row.Total += e.DurationMinutes
 	}
 
-	rows := make([]timesheetdto.ReportRow, 0, len(groups))
+	rows := make([]domain.ReportRow, 0, len(groups))
 	for _, row := range groups {
 		rows = append(rows, *row)
 	}
@@ -52,7 +52,7 @@ func groupEntries(entries []models.Entry) []timesheetdto.ReportRow {
 	return rows
 }
 
-func sortRowsByTicketCode(rows []timesheetdto.ReportRow) {
+func sortRowsByTicketCode(rows []domain.ReportRow) {
 	sort.Slice(rows, func(i, j int) bool {
 		return rows[i].Ticket.Code < rows[j].Ticket.Code
 	})
