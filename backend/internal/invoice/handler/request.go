@@ -1,7 +1,8 @@
 package handler
 
-type GenerateMonthlyInvoiceRequest struct {
-	Month        string `json:"month" binding:"required"` // "2025-12"
-	ConsultantID uint64 `json:"consultant_id" binding:"required"`
-	CompanyID    uint64 `json:"company_id" binding:"required"`
+type GenerateInvoiceRequest struct {
+	ConsultantID uint64 `form:"consultant_id" binding:"required"`
+	CompanyID    uint64 `form:"company_id" binding:"required"`
+	Start        string `form:"start" binding:"required"`
+	End          string `form:"end" binding:"required"`
 }

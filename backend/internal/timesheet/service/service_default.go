@@ -3,50 +3,102 @@ package service
 import (
 	"context"
 
-	entryrepo "github.com/lockw1n/time-logger/internal/repository/entry"
+	activitydomain "github.com/lockw1n/time-logger/internal/activity/domain"
+	activityrepo "github.com/lockw1n/time-logger/internal/activity/repository"
+	entryrepo "github.com/lockw1n/time-logger/internal/entry/repository"
+	ticketdomain "github.com/lockw1n/time-logger/internal/ticket/domain"
+	ticketrepo "github.com/lockw1n/time-logger/internal/ticket/repository"
 	"github.com/lockw1n/time-logger/internal/timesheet/domain"
 )
 
-type timesheet struct {
-	entryRepo entryrepo.Repository
+type service struct {
+	activityRepo activityrepo.Repository
+	entryRepo    entryrepo.Repository
+	ticketRepo   ticketrepo.Repository
 }
 
-func NewTimesheet(entryRepo entryrepo.Repository) Timesheet {
-	return &timesheet{entryRepo: entryRepo}
+func NewService(
+	activityRepo activityrepo.Repository,
+	entryRepo entryrepo.Repository,
+	ticketRepo ticketrepo.Repository,
+) Service {
+	return &service{
+		activityRepo: activityRepo,
+		entryRepo:    entryRepo,
+		ticketRepo:   ticketRepo,
+	}
 }
 
-func (s *timesheet) GenerateReport(ctx context.Context, cmd GenerateReportCommand) (*domain.Report, error) {
-	if err := validateReportScope(cmd.ConsultantID, cmd.CompanyID); err != nil {
-		return nil, err
+func (s *service) GenerateTimesheet(ctx context.Context, input GenerateTimesheetInput) (domain.Timesheet, error) {
+	if err := input.Validate(); err != nil {
+		return domain.Timesheet{}, ErrTimesheetInvalid
 	}
 
-	start, err := parseDate(cmd.Start)
+	entries, err := s.entryRepo.ListForConsultantPeriod(
+		ctx,
+		input.ConsultantID,
+		input.CompanyID,
+		input.Start,
+		input.End,
+	)
 	if err != nil {
-		return nil, err
+		return domain.Timesheet{}, ErrTimesheetConflict
 	}
 
-	end, err := parseDate(cmd.End)
+	if len(entries) == 0 {
+		return domain.Timesheet{
+			ConsultantID: input.ConsultantID,
+			CompanyID:    input.CompanyID,
+			Start:        input.Start,
+			End:          input.End,
+			Rows:         []domain.TimesheetRow{},
+		}, nil
+	}
+
+	ticketIDSet := make(map[uint64]struct{})
+	activityIDSet := make(map[uint64]struct{})
+
+	for _, e := range entries {
+		ticketIDSet[e.TicketID] = struct{}{}
+		activityIDSet[e.ActivityID] = struct{}{}
+	}
+
+	tickets, err := s.ticketRepo.ListByIDs(ctx, keys(ticketIDSet))
 	if err != nil {
-		return nil, err
+		return domain.Timesheet{}, ErrTimesheetConflict
 	}
 
-	if err := validateDateRange(start, end); err != nil {
-		return nil, err
-	}
-
-	entries, err := s.entryRepo.FindForPeriodWithDetails(ctx, cmd.ConsultantID, cmd.CompanyID, start, end)
+	activities, err := s.activityRepo.ListByIDs(ctx, keys(activityIDSet))
 	if err != nil {
-		return nil, err
+		return domain.Timesheet{}, ErrTimesheetConflict
 	}
 
-	rows := groupEntries(entries)
+	ticketsByID := make(map[uint64]ticketdomain.Ticket, len(tickets))
+	for _, ticket := range tickets {
+		ticketsByID[ticket.ID] = ticket
+	}
+
+	activitiesByID := make(map[uint64]activitydomain.Activity, len(activities))
+	for _, activity := range activities {
+		activitiesByID[activity.ID] = activity
+	}
+
+	rows := groupEntries(entries, ticketsByID, activitiesByID)
 	sortRowsByTicketCode(rows)
 
-	return &domain.Report{
-		ConsultantID: cmd.ConsultantID,
-		CompanyID:    cmd.CompanyID,
-		Start:        cmd.Start,
-		End:          cmd.End,
+	return domain.Timesheet{
+		ConsultantID: input.ConsultantID,
+		CompanyID:    input.CompanyID,
+		Start:        input.Start,
+		End:          input.End,
 		Rows:         rows,
 	}, nil
+}
+
+func keys[K comparable](m map[K]struct{}) []K {
+	out := make([]K, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
 }

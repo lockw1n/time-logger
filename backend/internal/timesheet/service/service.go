@@ -6,6 +6,6 @@ import (
 	"github.com/lockw1n/time-logger/internal/timesheet/domain"
 )
 
-type Timesheet interface {
-	GenerateReport(ctx context.Context, cmd GenerateReportCommand) (*domain.Report, error)
+type Service interface {
+	GenerateTimesheet(ctx context.Context, input GenerateTimesheetInput) (domain.Timesheet, error)
 }

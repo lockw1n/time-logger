@@ -3,61 +3,57 @@ package app
 import (
 	"os"
 
-	"github.com/lockw1n/time-logger/internal/excel"
 	"github.com/lockw1n/time-logger/internal/pdf"
 	"gorm.io/gorm"
 
+	activityrepo "github.com/lockw1n/time-logger/internal/activity/repository"
+	activityservice "github.com/lockw1n/time-logger/internal/activity/service"
+	companyrepo "github.com/lockw1n/time-logger/internal/company/repository"
+	companyservice "github.com/lockw1n/time-logger/internal/company/service"
+	consultantrepo "github.com/lockw1n/time-logger/internal/consultant/repository"
+	consultantservice "github.com/lockw1n/time-logger/internal/consultant/service"
+	contractrepo "github.com/lockw1n/time-logger/internal/contract/repository"
+	contractservice "github.com/lockw1n/time-logger/internal/contract/service"
+	entryrepo "github.com/lockw1n/time-logger/internal/entry/repository"
+	entryservice "github.com/lockw1n/time-logger/internal/entry/service"
 	invoiceservice "github.com/lockw1n/time-logger/internal/invoice/service"
-	companyrepo "github.com/lockw1n/time-logger/internal/repository/company"
-	consultantrepo "github.com/lockw1n/time-logger/internal/repository/consultant"
-	assignmentrepo "github.com/lockw1n/time-logger/internal/repository/consultantassignment"
-	entryrepo "github.com/lockw1n/time-logger/internal/repository/entry"
-	labelrepo "github.com/lockw1n/time-logger/internal/repository/label"
-	ticketrepo "github.com/lockw1n/time-logger/internal/repository/ticket"
-	companyservice "github.com/lockw1n/time-logger/internal/service/company"
-	consultantservice "github.com/lockw1n/time-logger/internal/service/consultant"
-	assignmentservice "github.com/lockw1n/time-logger/internal/service/consultantassignment"
-	entryservice "github.com/lockw1n/time-logger/internal/service/entry"
-	labelservice "github.com/lockw1n/time-logger/internal/service/label"
-	ticketservice "github.com/lockw1n/time-logger/internal/service/ticket"
+	ticketrepo "github.com/lockw1n/time-logger/internal/ticket/repository"
+	ticketservice "github.com/lockw1n/time-logger/internal/ticket/service"
 	timesheetservice "github.com/lockw1n/time-logger/internal/timesheet/service"
 )
 
 type Container struct {
 	DB *gorm.DB
 
-	CompanyService              companyservice.Service
-	ConsultantService           consultantservice.Service
-	ConsultantAssignmentService assignmentservice.Service
-	EntryService                entryservice.Service
-	LabelService                labelservice.Service
-	TicketService               ticketservice.Service
-	TimesheetService            timesheetservice.Timesheet
-	InvoiceGenerator            invoiceservice.InvoiceGenerator
-	PdfRenderer                 pdf.Renderer
-	ExcelRenderer               *excel.Renderer
+	CompanyService    companyservice.Service
+	ConsultantService consultantservice.Service
+	ContractService   contractservice.Service
+	TicketService     ticketservice.Service
+	ActivityService   activityservice.Service
+	EntryService      entryservice.Service
+	TimesheetService  timesheetservice.Service
+	InvoiceService    invoiceservice.Service
+	PdfRenderer       pdf.Renderer
 }
 
 func NewContainer(db *gorm.DB) *Container {
 	companyRepo := companyrepo.NewGormRepository(db)
 	consultantRepo := consultantrepo.NewGormRepository(db)
-	assignmentRepo := assignmentrepo.NewGormRepository(db)
-	entryRepo := entryrepo.NewGormRepository(db)
-	labelRepo := labelrepo.NewGormRepository(db)
+	contractRepo := contractrepo.NewGormRepository(db)
 	ticketRepo := ticketrepo.NewGormRepository(db)
-	clock := invoiceservice.NewClock()
+	activityRepo := activityrepo.NewGormRepository(db)
+	entryRepo := entryrepo.NewGormRepository(db)
 
 	return &Container{
-		DB:                          db,
-		CompanyService:              companyservice.NewService(companyRepo),
-		ConsultantService:           consultantservice.NewService(consultantRepo),
-		ConsultantAssignmentService: assignmentservice.NewService(assignmentRepo),
-		EntryService:                entryservice.NewService(entryRepo, assignmentRepo, ticketRepo),
-		LabelService:                labelservice.NewService(labelRepo),
-		TicketService:               ticketservice.NewService(ticketRepo),
-		TimesheetService:            timesheetservice.NewTimesheet(entryRepo),
-		InvoiceGenerator:            invoiceservice.NewInvoiceGenerator(assignmentRepo, companyRepo, consultantRepo, entryRepo, clock),
-		PdfRenderer:                 pdf.NewHTTPRenderer(os.Getenv("PDF_RENDERER_URL"), os.Getenv("PDF_RENDERER_TOKEN")),
-		ExcelRenderer:               excel.NewRenderer(),
+		DB:                db,
+		CompanyService:    companyservice.NewService(companyRepo),
+		ConsultantService: consultantservice.NewService(consultantRepo),
+		ContractService:   contractservice.NewService(contractRepo),
+		TicketService:     ticketservice.NewService(ticketRepo),
+		ActivityService:   activityservice.NewService(activityRepo),
+		EntryService:      entryservice.NewService(entryRepo, contractRepo, ticketRepo),
+		TimesheetService:  timesheetservice.NewService(activityRepo, entryRepo, ticketRepo),
+		InvoiceService:    invoiceservice.NewService(consultantRepo, companyRepo, contractRepo, activityRepo, entryRepo, ticketRepo),
+		PdfRenderer:       pdf.NewHTTPRenderer(os.Getenv("PDF_RENDERER_URL"), os.Getenv("PDF_RENDERER_TOKEN")),
 	}
 }

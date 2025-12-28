@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 1cm;
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            color: #000;
+            line-height: 1.2;
+        }
+
+        .header-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .spacer-sm {
+            margin-top: 10px;
+        }
+
+        .spacer-md {
+            margin-top: 18px;
+        }
+
+        .spacer-lg {
+            margin-top: 30px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .text-14 {
+            font-size: 14pt;
+        }
+
+        .single-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .intro-text {
+            text-indent: 32px;
+            text-align: justify;
+        }
+
+        .consultant-line {
+            text-align: left;
+        }
+
+        .divider {
+            margin: 24px 0 24px;
+            border-top: 1px solid #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12pt;
+        }
+
+        .table-header {
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #000;
+            padding: 4px 6px;
+        }
+
+        .col-desc {
+            width: 50%;
+        }
+
+        .col-qty {
+            width: 20%;
+        }
+
+        .col-unit {
+            width: 15%;
+        }
+
+        .col-amount {
+            width: 15%;
+        }
+
+        .cell {
+            border: 1px solid #000;
+            padding: 4px 6px;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .totals-block {
+            margin-top: 30px;
+            width: 100%;
+            float: none;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 36px;
+            font-size: 12pt;
+            line-height: 1.4;
+        }
+
+        .table-spacer td {
+            border: none;
+            height: 12px;
+            padding: 0;
+        }
+
+        .payment-line {
+            margin-top: 28px;
+            font-weight: bold;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        /* ===== PAGE 2 / DETAILS (STABLE) ===== */
+        .page-break {
+            page-break-before: always;
+        }
+
+        .project-section {
+            margin-bottom: 16px;
+        }
+
+        .details-table {
+            width: 100% !important; /* keep full width */
+            border-collapse: collapse;
+            border: 2px solid #000;
+            table-layout: fixed; /* deterministic */
+            font-size: 12pt;
+        }
+
+        .details-table th, .details-table td {
+            border: 1px solid #bfbfbf;
+            padding: 4px 6px;
+            line-height: 1.25;
+        }
+
+        .details-table tr {
+            page-break-inside: avoid;
+        }
+
+        /* Label bar */
+        .project-header-row th {
+            background: #e08b4f;
+            color: #000;
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #000;
+            padding: 8px 6px;
+        }
+
+        /* Header row */
+        .details-head th {
+            text-align: center;
+            font-weight: bold;
+            background: #fff;
+        }
+
+        /* ===== COLUMN DISTRIBUTION (Qt WebKit friendly) ===== */ /* Date tight */
+        .details-table col.col-date {
+            width: 120px;
+        }
+
+        /* Hours tight */
+        .details-table col.col-hours {
+            width: 100px;
+        }
+
+        /* Notes takes ALL remaining width */
+        .details-table col.col-notes {
+            width: auto;
+        }
+
+        /* Safety: never wrap date */
+        .details-date {
+            white-space: nowrap;
+        }
+
+        /* Hours alignment */
+        .details-hours {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* Subtotal row */
+        .subtotal-row td {
+            font-weight: bold;
+            border-top: 2px solid #000;
+        }
+
+        .subtotal-row td:last-child {
+            text-align: right;
+        }
+
+        /* Grand total */
+        .grand-total {
+            margin-top: 24px;
+            padding-top: 8px;
+            border-top: 4px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 14pt; /* same as label */
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<section class="header-grid">
+    <div>
+        <div>{{.Consultant.FullName}}</div>
+        <div class="single-line">{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}},
+            {{end}}{{.Consultant.City}}, {{.Consultant.AddressLine1}}{{if .Consultant.AddressLine2}},
+            {{.Consultant.AddressLine2}}{{end}}
+        </div>
+        <div>Tax number: {{.Consultant.TaxNumber}}</div>
+    </div>
+
+    <div class="spacer-sm"></div>
+
+    <div>
+        <div>{{.Company.Name}}</div>
+        <div>Tax number: {{.Company.TaxNumber}}</div>
+        <div>{{.Company.AddressLine1}} {{if .Company.AddressLine2}}, {{.Company.AddressLine2}}{{end}}</div>
+        <div>{{if .Company.Region}}{{.Company.Region}}, {{end}}{{.Company.Zip}} {{.Company.City}}</div>
+        <div>{{.Company.Country}}</div>
+    </div>
+</section>
+
+<!-- ORDER + INVOICE INFO -->
+<div class="spacer-md text-14">
+    <div>Ordernumber: {{.Contract.OrderNumber}}</div>
+    <div>Invoice Number: {{.Number}}</div>
+</div>
+
+<!-- DATE & INTRO -->
+<div class="spacer-lg">
+    <div class="center text-14">{{.Invoice.IssuedAtFormatted}}</div>
+    <div class="spacer-sm intro-text">
+        According to our agreement I’m sending the following invoice for the time
+        period {{.Start}} to {{.End}}. Billing rate (hourly)
+        {{.Contract.HourlyRateFormatted}}.
+    </div>
+    <div class="spacer-md consultant-line text-14">Consultant Name: {{.Consultant.FullName}}</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TABLE -->
+<table>
+    <thead>
+    <tr>
+        <th class="table-header col-desc">Description</th>
+        <th class="table-header col-qty">Quantity in hours</th>
+        <th class="table-header col-unit">Unit price</th>
+        <th class="table-header col-amount">Amount</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {{range .Activities}}
+    <tr>
+        <td class="cell">{{.Title}}</td>
+        <td class="cell right">{{.TotalHoursFormatted}}</td>
+        <td class="cell right">{{.HourlyRateFormatted}}</td>
+        <td class="cell right"><strong>{{.SubtotalFormatted}}</strong></td>
+    </tr>
+    {{end}}
+    <tr>
+        <td class="cell">&nbsp;</td>
+        <td class="cell">&nbsp;</td>
+        <td class="cell">&nbsp;</td>
+        <td class="cell">&nbsp;</td>
+    </tr>
+    <tr>
+        <td class="cell"><strong>Total</strong></td>
+        <td class="cell right"><strong>{{.Totals.TotalHoursFormatted}}</strong></td>
+        <td class="cell right"></td>
+        <td class="cell right"><strong>{{.Totals.SubtotalFormatted}}</strong></td>
+    </tr>
+    <tr class="table-spacer">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- TOTALS BLOCK (RIGHT ALIGNED LIKE DOCX) -->
+<div class="totals-block">
+    <div class="totals-row">
+        <span>Total hours</span>
+        <span class="right bold">{{.Totals.TotalHoursFormatted}}</span>
+    </div>
+
+    <div class="totals-row">
+        <span>Total amount SUM</span>
+        <span class="right bold">{{.Totals.SubtotalFormatted}}</span>
+    </div>
+</div>
+
+<div class="clear"></div>
+
+<!-- PAYMENT CONDITION -->
+<div class="spacer-md payment-line">
+    Payment Condition: {{.Contract.PaymentTerms}}
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <div>Account details, IBAN, BIC:</div>
+    <div>Account beneficiary: {{.Consultant.FullName}}</div>
+    <div>Bank Name: {{.Consultant.BankName}}</div>
+    <div>Bank Address: {{.Consultant.BankAddress}}</div>
+    <div>IBAN/Account number: {{.Consultant.BankIban}}</div>
+    <div>SWIFT/BIC Code: {{.Consultant.BankBic}}</div>
+    <div>Bank Country: {{.Consultant.BankCountry}}</div>
+</div>
+
+<div class="page-break"></div>
+
+{{range .Activities}}
+    {{if gt .TotalHours 0.0}}
+        <div class="project-section">
+            <table class="details-table">
+                <colgroup>
+                    <col class="col-date">
+                    <col class="col-notes">
+                    <col class="col-hours">
+                </colgroup>
+
+                <thead>
+                    <tr class="project-header-row">
+                        <th colspan="3">{{.Title}}</th>
+                    </tr>
+                    <tr class="details-head">
+                        <th>Date</th>
+                        <th>Notes</th>
+                        <th>Hours</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{range .Entries}}
+                        <tr>
+                            <td class="details-date">{{.DateFormatted}}</td>
+                            <td class="details-notes">{{.TicketCode}}</td>
+                            <td class="details-hours">{{.HoursFormatted}}</td>
+                        </tr>
+                    {{end}}
+                    <tr class="subtotal-row">
+                        <td colspan="2">Subtotal {{.Title}}</td>
+                        <td class="details-hours">{{.TotalHoursFormatted}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {{end}}
+{{end}}
+<div class="grand-total">
+    <span>Total over all projects and tasks</span>
+    <span>{{.Totals.TotalHoursFormatted}}</span>
+</div>
+
+</body>
+</html>
