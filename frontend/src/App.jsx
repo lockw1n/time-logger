@@ -2,6 +2,7 @@ import React from "react";
 import TimesheetTable from "./components/TimesheetTable";
 import TimeLogModal from "./components/TimeLogModal";
 import InvoiceGenerator from "./components/InvoiceGenerator";
+import WeekNavigator from "./components/WeekNavigator";
 import { useTimesheet } from "./hooks/useTimesheet";
 import { useActivities } from "./hooks/useActivities";
 import { useTimeLogForm } from "./hooks/useTimeLogForm";
@@ -23,23 +24,11 @@ export default function App() {
             </h1>
 
             <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4 text-gray-200">
-                <div className="flex items-center gap-3">
-                    <button
-                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 transition"
-                        onClick={goToPreviousWeek}
-                    >
-                        ← Previous week
-                    </button>
-                    <div className="px-4 py-1 rounded bg-gray-800 border border-gray-700 text-sm min-w-[220px] text-center">
-                        {rangeLabel}
-                    </div>
-                    <button
-                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 transition"
-                        onClick={goToNextWeek}
-                    >
-                        Next week →
-                    </button>
-                </div>
+                <WeekNavigator
+                    label={rangeLabel}
+                    onPrev={goToPreviousWeek}
+                    onNext={goToNextWeek}
+                />
                 <button
                     className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition"
                     onClick={openNew}
