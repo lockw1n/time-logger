@@ -27,7 +27,7 @@ body {
     filter: invert(90%) sepia(10%) saturate(300%) hue-rotate(180deg) brightness(1.2);
 }
 
-.label-select {
+.activity-select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;

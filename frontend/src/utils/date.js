@@ -7,6 +7,26 @@ export const toYMD = (date) => {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+export const parseDMY = (value) => {
+    if (!value) return null;
+    const parts = String(value).split(".");
+    if (parts.length !== 3) return null;
+    const [dayStr, monthStr, yearStr] = parts;
+    const day = Number(dayStr);
+    const month = Number(monthStr);
+    const year = Number(yearStr);
+    if (!Number.isInteger(day) || !Number.isInteger(month) || !Number.isInteger(year)) return null;
+    const date = new Date(year, month - 1, day);
+    if (
+        date.getFullYear() !== year ||
+        date.getMonth() !== month - 1 ||
+        date.getDate() !== day
+    ) {
+        return null;
+    }
+    return date;
+};
+
 export const getStartOfWeek = (date) => {
     const d = new Date(date);
     const day = d.getDay(); // 0=Sun

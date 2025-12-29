@@ -167,7 +167,7 @@
             page-break-inside: avoid;
         }
 
-        /* Label bar */
+        /* Activity bar */
         .project-header-row th {
             background: #e08b4f;
             color: #000;
@@ -229,7 +229,7 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            font-size: 14pt; /* same as label */
+            font-size: 14pt;
             font-weight: bold;
         }
     </style>
@@ -241,9 +241,11 @@
 <section class="header-grid">
     <div>
         <div>{{.Consultant.FullName}}</div>
-        <div class="single-line">{{.Consultant.Country}}, {{.Consultant.Zip}}, {{if .Consultant.Region}}{{.Consultant.Region}},
-            {{end}}{{.Consultant.City}}, {{.Consultant.AddressLine1}}{{if .Consultant.AddressLine2}},
-            {{.Consultant.AddressLine2}}{{end}}
+        <div class="single-line">
+            {{.Consultant.Country}}, {{.Consultant.Zip}},
+            {{if .Consultant.Region}}{{.Consultant.Region}}, {{end}}
+            {{.Consultant.City}}, {{.Consultant.AddressLine1}}
+            {{if .Consultant.AddressLine2}}, {{.Consultant.AddressLine2}}{{end}}
         </div>
         <div>Tax number: {{.Consultant.TaxNumber}}</div>
     </div>
@@ -267,7 +269,7 @@
 
 <!-- DATE & INTRO -->
 <div class="spacer-lg">
-    <div class="center text-14">{{.Invoice.IssuedAtFormatted}}</div>
+    <div class="center text-14">{{.IssuedAt}}</div>
     <div class="spacer-sm intro-text">
         According to our agreement I’m sending the following invoice for the time
         period {{.Start}} to {{.End}}. Billing rate (hourly)
@@ -336,7 +338,7 @@
 
 <!-- PAYMENT CONDITION -->
 <div class="spacer-md payment-line">
-    Payment Condition: {{.Contract.PaymentTerms}}
+    {{if .Contract.PaymentTerms}}Payment Condition: {{.Contract.PaymentTerms}}{{end}}
 </div>
 
 <!-- FOOTER -->
@@ -345,50 +347,48 @@
     <div>Account beneficiary: {{.Consultant.FullName}}</div>
     <div>Bank Name: {{.Consultant.BankName}}</div>
     <div>Bank Address: {{.Consultant.BankAddress}}</div>
-    <div>IBAN/Account number: {{.Consultant.BankIban}}</div>
-    <div>SWIFT/BIC Code: {{.Consultant.BankBic}}</div>
+    <div>IBAN/Account number: {{.Consultant.BankIBAN}}</div>
+    <div>SWIFT/BIC Code: {{.Consultant.BankBIC}}</div>
     <div>Bank Country: {{.Consultant.BankCountry}}</div>
 </div>
 
 <div class="page-break"></div>
 
 {{range .Activities}}
-    {{if gt .TotalHours 0.0}}
-        <div class="project-section">
-            <table class="details-table">
-                <colgroup>
-                    <col class="col-date">
-                    <col class="col-notes">
-                    <col class="col-hours">
-                </colgroup>
+    <div class="project-section">
+        <table class="details-table">
+            <colgroup>
+                <col class="col-date">
+                <col class="col-notes">
+                <col class="col-hours">
+            </colgroup>
 
-                <thead>
-                    <tr class="project-header-row">
-                        <th colspan="3">{{.Title}}</th>
-                    </tr>
-                    <tr class="details-head">
-                        <th>Date</th>
-                        <th>Notes</th>
-                        <th>Hours</th>
-                    </tr>
-                </thead>
+            <thead>
+                <tr class="project-header-row">
+                    <th colspan="3">{{.Title}}</th>
+                </tr>
+                <tr class="details-head">
+                    <th>Date</th>
+                    <th>Notes</th>
+                    <th>Hours</th>
+                </tr>
+            </thead>
 
-                <tbody>
-                    {{range .Entries}}
-                        <tr>
-                            <td class="details-date">{{.DateFormatted}}</td>
-                            <td class="details-notes">{{.TicketCode}}</td>
-                            <td class="details-hours">{{.HoursFormatted}}</td>
-                        </tr>
-                    {{end}}
-                    <tr class="subtotal-row">
-                        <td colspan="2">Subtotal {{.Title}}</td>
-                        <td class="details-hours">{{.TotalHoursFormatted}}</td>
+            <tbody>
+                {{range .Entries}}
+                    <tr>
+                        <td class="details-date">{{.DateFormatted}}</td>
+                        <td class="details-notes">{{.TicketCode}}</td>
+                        <td class="details-hours">{{.HoursFormatted}}</td>
                     </tr>
-                </tbody>
-            </table>
-        </div>
-    {{end}}
+                {{end}}
+                <tr class="subtotal-row">
+                    <td colspan="2">Subtotal {{.Title}}</td>
+                    <td class="details-hours">{{.TotalHoursFormatted}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 {{end}}
 <div class="grand-total">
     <span>Total over all projects and tasks</span>

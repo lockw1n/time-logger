@@ -3,14 +3,16 @@ import React, { useEffect, useMemo } from "react";
 export default function TimeLogModal({
     open,
     ticket,
-    labelId,
-    labelOptions = [],
+    activityId,
+    activityOptions = [],
     hours,
     date,
     errors = {},
     locked = false,
+    loadingActivities = false,
+    activityError = "",
     onChangeTicket,
-    onChangeLabel,
+    onChangeActivity,
     onChangeHours,
     onChangeDate,
     onCancel,
@@ -18,13 +20,13 @@ export default function TimeLogModal({
     onDelete,
     canDelete = false,
 }) {
-    const selectedLabel = useMemo(
-        () => labelOptions.find((option) => String(option.id) === String(labelId)),
-        [labelId, labelOptions]
+    const selectedActivity = useMemo(
+        () => activityOptions.find((option) => String(option.id) === String(activityId)),
+        [activityId, activityOptions]
     );
 
-    const swatchStyle = selectedLabel?.color
-        ? { backgroundColor: selectedLabel.color }
+    const swatchStyle = selectedActivity?.color
+        ? { backgroundColor: selectedActivity.color }
         : undefined;
 
     useEffect(() => {
@@ -63,23 +65,30 @@ export default function TimeLogModal({
                             errors.ticket ? "border-red-500 ring-red-400/60" : "border-gray-600"
                         } ${locked ? "bg-gray-800 cursor-not-allowed" : "bg-gray-900"}`}
                     />
-                    <div className="relative w-full">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs uppercase tracking-wide text-gray-400">Activity</span>
+                        <div className="relative w-full">
                         <select
-                            value={labelId ?? ""}
+                            value={activityId ?? ""}
                             onChange={(e) => {
                                 const value = e.target.value;
-                                onChangeLabel(value === "" ? null : Number(value));
+                                onChangeActivity(value === "" ? null : Number(value));
                             }}
-                            disabled={locked}
-                            className={`label-select px-3 py-2 pr-14 rounded border text-gray-100 focus:outline-none w-full ${
-                                errors.label ? "border-red-500 ring-1 ring-red-400/60" : "border-gray-600"
-                            } ${locked ? "bg-gray-800 cursor-not-allowed" : "bg-gray-900"}`}
+                            disabled={locked || loadingActivities}
+                            className={`activity-select px-3 py-2 pr-14 rounded border text-gray-100 focus:outline-none w-full ${
+                                errors.activity ? "border-red-500 ring-1 ring-red-400/60" : "border-gray-600"
+                            } ${locked || loadingActivities ? "bg-gray-800 cursor-not-allowed" : "bg-gray-900"}`}
                         >
-                            {labelOptions.map((option) => (
-                                <option key={option.id ?? "none"} value={option.id ?? ""}>
-                                    {option.name || "No label"}
-                                </option>
-                            ))}
+                            {loadingActivities && <option value="">Loading activities…</option>}
+                            {!loadingActivities && activityOptions.length === 0 && (
+                                <option value="">No activities available</option>
+                            )}
+                            {!loadingActivities &&
+                                activityOptions.map((option) => (
+                                    <option key={option.id ?? "none"} value={option.id ?? ""}>
+                                        {option.name || "No activity"}
+                                    </option>
+                                ))}
                         </select>
                         <span
                             className={`absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-sm border border-gray-600 ${
@@ -88,6 +97,10 @@ export default function TimeLogModal({
                             style={swatchStyle}
                             aria-hidden="true"
                         />
+                        </div>
+                        {activityError && (
+                            <span className="text-xs text-red-400">{activityError}</span>
+                        )}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <input
