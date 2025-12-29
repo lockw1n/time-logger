@@ -1,101 +1,21 @@
-import React, { useState } from "react";
-import { createEntry, updateEntry, deleteEntry } from "./api/entries";
+import React from "react";
 import TimesheetTable from "./components/TimesheetTable";
 import TimeLogModal from "./components/TimeLogModal";
 import InvoiceGenerator from "./components/InvoiceGenerator";
+import WeekNavigator from "./components/WeekNavigator";
 import { useTimesheet } from "./hooks/useTimesheet";
-import { toYMD } from "./utils/date";
-import { parseHoursInput } from "./utils/time";
+import { useActivities } from "./hooks/useActivities";
+import { useTimeLogForm } from "./hooks/useTimeLogForm";
 
 export default function App() {
-    const { days, rows, totals, rangeLabel, labelOptions, ticketOptions, goToNextWeek, goToPreviousWeek, refresh } =
+    const { days, rows, totals, rangeLabel, goToNextWeek, goToPreviousWeek, refresh } =
         useTimesheet();
-
-    const [adding, setAdding] = useState(false);
-    const [activeEntryId, setActiveEntryId] = useState(null);
-    const [newTicket, setNewTicket] = useState("");
-    const [newLabelId, setNewLabelId] = useState(null);
-    const [newHours, setNewHours] = useState("");
-    const [newDate, setNewDate] = useState(() => toYMD(new Date()));
-    const [errors, setErrors] = useState({});
-    const [fieldsLocked, setFieldsLocked] = useState(false);
-
-    const getDefaultLabelId = () => labelOptions?.[0]?.id ?? null;
-
-    const openLogForm = ({ ticket = "", label = null, date = new Date(), entry = null, locked = false }) => {
-        const resolvedLabelId = label?.id ?? getDefaultLabelId();
-        const resolvedTicketCode = ticket?.code || "";
-        setActiveEntryId(entry?.id ?? null);
-        setNewTicket(resolvedTicketCode);
-        setNewLabelId(resolvedLabelId);
-        setNewHours(entry ? String(entry.hours ?? "") : "");
-        setNewDate(toYMD(date));
-        setErrors({});
-        setFieldsLocked(locked);
-        setAdding(true);
-    };
-
-    const resetFormState = () => {
-        setActiveEntryId(null);
-        setNewTicket("");
-        setNewLabelId(getDefaultLabelId());
-        setNewHours("");
-        setNewDate(toYMD(new Date()));
-        setErrors({});
-        setFieldsLocked(false);
-    };
-
-    const handleAddRow = async (ticketCode, labelId, hours, dateValue) => {
-        const nextErrors = {};
-        const trimmedTicket = (ticketCode || "").trim();
-        const selectedLabel = labelOptions.find((opt) => String(opt.id) === String(labelId));
-        const hoursNum = parseHoursInput(hours);
-        const hasDate = Boolean(dateValue);
-        const hasLabel = selectedLabel || !labelOptions.length;
-
-        if (!trimmedTicket) nextErrors.ticket = true;
-        if (!hasLabel) nextErrors.label = true;
-        if (Number.isNaN(hoursNum) || hoursNum < 0 || hoursNum > 24) nextErrors.hours = true;
-        if (!hasDate) nextErrors.date = true;
-
-        if (Object.keys(nextErrors).length) {
-            setErrors(nextErrors);
-            return;
-        }
-
-        setErrors({});
-        const dateISO = (dateValue && dateValue.trim()) || toYMD(new Date());
-        const durationMinutes = Math.round(hoursNum * 60);
-        if (durationMinutes % 15 !== 0) {
-            setErrors({ hours: true });
-            return;
-        }
-
-        const payload = {
-            ticket_code: trimmedTicket,
-            label_id: selectedLabel?.id ?? null,
-            date: dateISO,
-            duration_minutes: durationMinutes,
-        };
-
-        if (activeEntryId) {
-            await updateEntry(activeEntryId, payload);
-        } else {
-            await createEntry(payload);
-        }
-        setAdding(false);
-        resetFormState();
-
-        refresh();
-    };
-
-    const handleDeleteActiveEntry = async () => {
-        if (!activeEntryId) return;
-        await deleteEntry(activeEntryId);
-        setAdding(false);
-        resetFormState();
-        refresh();
-    };
+    const { activities, loading: activitiesLoading, error: activitiesError } = useActivities(1);
+    const { openNew, openFromCell, modalProps } = useTimeLogForm({
+        activities,
+        onSaved: refresh,
+        defaultDate: new Date(),
+    });
 
     return (
         <div className="min-h-screen p-6 flex flex-col items-center relative">
@@ -104,26 +24,14 @@ export default function App() {
             </h1>
 
             <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4 text-gray-200">
-                <div className="flex items-center gap-3">
-                    <button
-                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 transition"
-                        onClick={goToPreviousWeek}
-                    >
-                        ← Previous week
-                    </button>
-                    <div className="px-4 py-1 rounded bg-gray-800 border border-gray-700 text-sm min-w-[220px] text-center">
-                        {rangeLabel}
-                    </div>
-                    <button
-                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 transition"
-                        onClick={goToNextWeek}
-                    >
-                        Next week →
-                    </button>
-                </div>
+                <WeekNavigator
+                    label={rangeLabel}
+                    onPrev={goToPreviousWeek}
+                    onNext={goToNextWeek}
+                />
                 <button
                     className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition"
-                    onClick={() => openLogForm({})}
+                    onClick={openNew}
                 >
                     Log time
                 </button>
@@ -134,42 +42,14 @@ export default function App() {
                     days={days}
                     rows={rows}
                     totalsByTicket={totals}
-                    onCellOpen={({ ticket, label, date, entry }) => openLogForm({ ticket, label, date, entry, locked: true })}
+                    onCellOpen={openFromCell}
                 />
             </div>
 
             <TimeLogModal
-                open={adding}
-                ticket={newTicket}
-                labelId={newLabelId}
-                labelOptions={labelOptions}
-                hours={newHours}
-                date={newDate}
-                errors={errors}
-                locked={fieldsLocked}
-                canDelete={Boolean(activeEntryId)}
-                onChangeTicket={(val) => {
-                    setNewTicket(val);
-                    setErrors((prev) => ({ ...prev, ticket: false }));
-                }}
-                onChangeLabel={(val) => {
-                    setNewLabelId(val);
-                    setErrors((prev) => ({ ...prev, label: false }));
-                }}
-                onChangeHours={(val) => {
-                    setNewHours(val);
-                    setErrors((prev) => ({ ...prev, hours: false }));
-                }}
-                onChangeDate={(val) => {
-                    setNewDate(val);
-                    setErrors((prev) => ({ ...prev, date: false }));
-                }}
-                onCancel={() => {
-                    setAdding(false);
-                    resetFormState();
-                }}
-                onSave={() => handleAddRow(newTicket, newLabelId, newHours, newDate)}
-                onDelete={handleDeleteActiveEntry}
+                {...modalProps}
+                loadingActivities={activitiesLoading}
+                activityError={activitiesError}
             />
 
             <InvoiceGenerator />

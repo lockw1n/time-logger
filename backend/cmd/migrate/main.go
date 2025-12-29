@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/lockw1n/time-logger/internal/app"
-	"github.com/lockw1n/time-logger/internal/models"
+	"github.com/lockw1n/time-logger/internal/migration"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 	database := app.RetryConnect(5, 2*time.Second)
 
 	log.Println("🛠️ Running migrations...")
-	if err := database.AutoMigrate(models.AllModels...); err != nil {
+	if err := database.AutoMigrate(migration.ModelsForMigration()...); err != nil {
 		log.Fatalf("❌ AutoMigrate failed: %v", err)
 	}
 

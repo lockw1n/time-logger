@@ -13,12 +13,15 @@ export default function TimesheetCell({ entry, color, onOpen, weekend = false, e
     const paletteKey = (color || "").toLowerCase();
     const filledBg = COLORS[paletteKey] || "bg-gray-700/60 border-gray-600";
     const bgColor = isFilled ? filledBg : emptyBg;
+    const hasCustomColor = isFilled && color && !COLORS[paletteKey];
+    const customStyle = hasCustomColor ? { backgroundColor: color, borderColor: color } : undefined;
 
     const weekendTint = weekend ? "ring-1 ring-slate-400/50 shadow-inner shadow-slate-300/10" : "";
 
     return (
         <td
             className={`${bgColor} ${weekendTint} text-center px-2 py-2 border cursor-pointer transition hover:brightness-110 w-20 ${extraClass}`}
+            style={customStyle}
             onClick={onOpen}
         >
             <span className="font-medium">

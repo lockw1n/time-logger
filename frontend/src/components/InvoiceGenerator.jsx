@@ -26,6 +26,28 @@ export default function InvoiceGenerator() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    const isBusy = loadingPdf || loadingExcel;
+    const isMonthValid = Boolean(form.month);
+
+    const mapInvoiceError = (err) => {
+        if (err?.code === "invalid_month") {
+            return "Select a valid month to generate the invoice.";
+        }
+        const status = err?.response?.status;
+        if (status === 400) return "Invoice request is invalid. Check the selected month.";
+        if (status === 409) return "Invoice could not be generated for this period.";
+        return "Failed to generate invoice. Check required fields and try again.";
+    };
+
+    const createBlobUrl = (blob, filename, type) => {
+        const file = new File([blob], filename, { type });
+        return window.URL.createObjectURL(file);
+    };
+
+    const revokeLater = (url, delayMs) => {
+        window.setTimeout(() => window.URL.revokeObjectURL(url), delayMs);
+    };
+
     const handleChange = (key) => (e) => {
         const value = e.target.value;
         setForm((prev) => ({ ...prev, [key]: value }));
@@ -38,11 +60,11 @@ export default function InvoiceGenerator() {
         setError("");
         setSuccess("");
         try {
+            if (!isMonthValid) {
+                throw { code: "invalid_month" };
+            }
             const { blob, filename, isInline } = await generateMonthlyInvoicePdf({ month: form.month });
-            const file = new File([blob], filename, { type: "application/pdf" });
-            const url = window.URL.createObjectURL(file);
-
-            const cleanup = () => window.URL.revokeObjectURL(url);
+            const url = createBlobUrl(blob, filename, "application/pdf");
 
             if (isInline) {
                 const newTab = window.open(url, "_blank");
@@ -50,15 +72,15 @@ export default function InvoiceGenerator() {
                     triggerDownload(url, filename);
                 }
                 setSuccess("Invoice opened in a new tab.");
-                setTimeout(cleanup, 60_000);
+                revokeLater(url, 60_000);
             } else {
                 triggerDownload(url, filename);
-                setTimeout(cleanup, 5_000);
+                revokeLater(url, 5_000);
                 setSuccess("Invoice download started.");
             }
         } catch (err) {
             console.error("invoice pdf generation failed", err);
-            setError("Failed to generate invoice. Check required fields and try again.");
+            setError(mapInvoiceError(err));
         } finally {
             setLoadingPdf(false);
         }
@@ -69,17 +91,21 @@ export default function InvoiceGenerator() {
         setError("");
         setSuccess("");
         try {
+            if (!isMonthValid) {
+                throw { code: "invalid_month" };
+            }
             const { blob, filename } = await generateMonthlyInvoiceExcel({ month: form.month });
-            const file = new File([blob], filename, {
-                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            });
-            const url = window.URL.createObjectURL(file);
+            const url = createBlobUrl(
+                blob,
+                filename,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            );
             triggerDownload(url, filename);
-            setTimeout(() => window.URL.revokeObjectURL(url), 5_000);
+            revokeLater(url, 5_000);
             setSuccess("Invoice Excel download started.");
         } catch (err) {
             console.error("invoice excel generation failed", err);
-            setError("Failed to generate invoice. Check required fields and try again.");
+            setError(mapInvoiceError(err));
         } finally {
             setLoadingExcel(false);
         }
@@ -106,14 +132,14 @@ export default function InvoiceGenerator() {
                 <div className="flex flex-wrap gap-3">
                     <button
                         onClick={handleDownloadPdf}
-                        disabled={loadingPdf || loadingExcel}
+                        disabled={isBusy || !isMonthValid}
                         className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium shadow-sm transition"
                     >
                         {loadingPdf ? "Generating…" : "Generate PDF"}
                     </button>
                     <button
                         onClick={handleDownloadExcel}
-                        disabled={loadingPdf || loadingExcel}
+                        disabled={isBusy || !isMonthValid}
                         className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-medium shadow-sm transition"
                     >
                         {loadingExcel ? "Generating…" : "Generate Excel"}
@@ -128,6 +154,7 @@ export default function InvoiceGenerator() {
                         type="month"
                         value={form.month}
                         onChange={handleChange("month")}
+                        disabled={isBusy}
                         className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-gray-100 date-input month-input"
                     />
                 </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getTimesheet } from "../api/timesheet";
-import { getStartOfWeek, getWeekDays, toYMD } from "../utils/date";
+import { getStartOfWeek, getWeekDays, parseDMY, toYMD } from "../utils/date";
 
 const DAYS_WINDOW = 14;
 
@@ -20,15 +20,11 @@ const buildRangeParams = (anchor) => {
 const buildRowsFromTimesheet = (rows) => {
     const tableRows = [];
     const totals = {};
-    const labelMap = new Map();
     const ticketMap = new Map();
 
     rows.forEach((row) => {
         const ticketId = row.ticket?.id ?? null;
         const ticketCode = row.ticket?.code || "—";
-        const labelId = row.label?.id ?? null;
-        const labelName = row.label?.name || "";
-        const labelColor = (row.label?.color || "").toLowerCase();
         const cells = {};
 
         if (ticketId !== null) {
@@ -38,18 +34,13 @@ const buildRowsFromTimesheet = (rows) => {
             }
         }
 
-        if (labelId !== null) {
-            const key = String(labelId);
-            if (!labelMap.has(key)) {
-                labelMap.set(key, { id: labelId, name: labelName, color: labelColor });
-            }
-        }
-
         (row.entries || []).forEach((entry) => {
-            const dateKey = toYMD(entry.date);
+            const parsedDate = parseDMY(entry.date);
+            if (!parsedDate) return;
+            const dateKey = toYMD(parsedDate);
             cells[dateKey] = {
                 id: entry.id,
-                date: entry.date,
+                date: parsedDate,
                 hours: (entry.duration_minutes || 0) / 60,
                 comment: entry.comment,
             };
@@ -57,22 +48,21 @@ const buildRowsFromTimesheet = (rows) => {
 
         tableRows.push({
             ticket: { id: ticketId, code: ticketCode },
-            label: { id: labelId, name: labelName, color: labelColor },
-            color: labelColor,
+            activity: {
+                id: row.activity?.id ?? null,
+                name: row.activity?.name || "",
+                color: (row.activity?.color || "").toLowerCase(),
+            },
+            color: (row.activity?.color || "").toLowerCase(),
             cells,
         });
 
-        totals[ticketCode] = (row.total || 0) / 60;
+        totals[ticketCode] = (totals[ticketCode] || 0) + (row.total || 0) / 60;
     });
-
-    const labelOptions = Array.from(labelMap.values());
-    if (!labelOptions.length) {
-        labelOptions.push({ id: null, name: "No label", color: "gray" });
-    }
 
     const ticketOptions = Array.from(ticketMap.values());
 
-    return { tableRows, totals, labelOptions, ticketOptions };
+    return { tableRows, totals, ticketOptions };
 };
 
 export function useTimesheet() {
@@ -85,7 +75,6 @@ export function useTimesheet() {
     const [days, setDays] = useState(() => getWeekDays(initialAnchor, DAYS_WINDOW));
     const [rows, setRows] = useState([]);
     const [totals, setTotals] = useState({});
-    const [labelOptions, setLabelOptions] = useState([]);
     const [ticketOptions, setTicketOptions] = useState([]);
 
     useEffect(() => {
@@ -96,10 +85,9 @@ export function useTimesheet() {
         async (anchor = anchorDate) => {
             const { startStr, endStr } = buildRangeParams(anchor);
             const data = await getTimesheet({ start: startStr, end: endStr });
-            const { tableRows, totals, labelOptions, ticketOptions } = buildRowsFromTimesheet(data?.rows || []);
+            const { tableRows, totals, ticketOptions } = buildRowsFromTimesheet(data?.rows || []);
             setRows(tableRows);
             setTotals(totals);
-            setLabelOptions(labelOptions);
             setTicketOptions(ticketOptions);
         },
         [anchorDate]
@@ -145,7 +133,6 @@ export function useTimesheet() {
         totals,
         rangeLabel,
         refresh,
-        labelOptions,
         ticketOptions,
         setAnchorDate,
         goToNextWeek,

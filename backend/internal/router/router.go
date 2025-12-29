@@ -2,13 +2,16 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-
 	"github.com/lockw1n/time-logger/internal/app"
-	companyhandler "github.com/lockw1n/time-logger/internal/handlers/company"
-	consultanthandler "github.com/lockw1n/time-logger/internal/handlers/consultant"
-	entryhandler "github.com/lockw1n/time-logger/internal/handlers/entry"
 	"github.com/lockw1n/time-logger/internal/health"
+
+	activityhandler "github.com/lockw1n/time-logger/internal/activity/handler"
+	companyhandler "github.com/lockw1n/time-logger/internal/company/handler"
+	consultanthandler "github.com/lockw1n/time-logger/internal/consultant/handler"
+	contracthandler "github.com/lockw1n/time-logger/internal/contract/handler"
+	entryhandler "github.com/lockw1n/time-logger/internal/entry/handler"
 	invoicehandler "github.com/lockw1n/time-logger/internal/invoice/handler"
+	tickethandler "github.com/lockw1n/time-logger/internal/ticket/handler"
 	timesheethandler "github.com/lockw1n/time-logger/internal/timesheet/handler"
 )
 
@@ -23,25 +26,52 @@ func SetupRouter(container *app.Container) *gin.Engine {
 
 	companyHandler := companyhandler.NewHandler(container.CompanyService)
 	consultantHandler := consultanthandler.NewHandler(container.ConsultantService)
-	timesheetHandler := timesheethandler.NewTimesheet(container.TimesheetService)
-	entryHandler := entryhandler.NewEntryHandler(container.EntryService)
-	invoiceHandler := invoicehandler.NewInvoice(container.InvoiceGenerator, container.PdfRenderer, container.ExcelRenderer)
+	contractHandler := contracthandler.NewHandler(container.ContractService)
+	ticketHandler := tickethandler.NewHandler(container.TicketService)
+	activityHandler := activityhandler.NewHandler(container.ActivityService)
+	entryHandler := entryhandler.NewHandler(container.EntryService)
+	timesheetHandler := timesheethandler.NewHandler(container.TimesheetService)
+	invoiceHandler := invoicehandler.NewHandler(container.InvoiceService, container.PdfRenderer)
 
 	api := r.Group("/api")
 	{
-		api.GET("/company", companyHandler.GetCompany)
-		api.PUT("/company", companyHandler.UpsertCompany)
+		api.POST("/companies", companyHandler.CreateCompany)
+		api.PUT("/companies/:id", companyHandler.UpdateCompany)
+		api.DELETE("/companies/:id", companyHandler.DeleteCompany)
+		api.GET("/companies/:id", companyHandler.GetCompany)
+		api.GET("/companies", companyHandler.ListCompanies)
 
-		api.GET("/consultant", consultantHandler.GetConsultant)
-		api.PUT("/consultant", consultantHandler.UpsertConsultant)
+		api.POST("/consultants", consultantHandler.CreateConsultant)
+		api.PUT("/consultants/:id", consultantHandler.UpdateConsultant)
+		api.DELETE("/consultants/:id", consultantHandler.DeleteConsultant)
+		api.GET("/consultants/:id", consultantHandler.GetConsultant)
+
+		api.POST("/contracts", contractHandler.CreateContract)
+		api.PUT("/contracts/:id", contractHandler.UpdateContract)
+		api.DELETE("/contracts/:id", contractHandler.DeleteContract)
+		api.GET("/contracts/:id", contractHandler.GetContract)
+		api.GET("/contracts", contractHandler.ListContractsForConsultant)
+
+		api.POST("/tickets", ticketHandler.CreateTicket)
+		api.PUT("/tickets/:id", ticketHandler.UpdateTicket)
+		api.DELETE("/tickets/:id", ticketHandler.DeleteTicket)
+		api.GET("/tickets/:id", ticketHandler.GetTicket)
+		api.GET("/tickets", ticketHandler.ListTicketsForCompany)
+
+		api.POST("/activities", activityHandler.CreateActivity)
+		api.PUT("/activities/:id", activityHandler.UpdateActivity)
+		api.DELETE("/activities/:id", activityHandler.DeleteActivity)
+		api.GET("/activities/:id", activityHandler.GetActivity)
+		api.GET("/activities", activityHandler.ListActivitiesForCompany)
+
+		api.POST("/entries", entryHandler.CreateEntry)
+		api.PUT("/entries/:id", entryHandler.UpdateEntry)
+		api.DELETE("/entries/:id", entryHandler.DeleteEntry)
+		api.GET("/entries/:id", entryHandler.GetEntry)
 
 		api.GET("/timesheet", timesheetHandler.GetTimesheet)
 
-		api.POST("/entries", entryHandler.Create)
-		api.PUT("/entries/:id", entryHandler.Update)
-		api.DELETE("/entries/:id", entryHandler.Delete)
-
-		api.POST("/invoices/monthly", invoiceHandler.GenerateMonthly)
+		api.POST("/invoices/generate", invoiceHandler.GenerateInvoice)
 	}
 
 	return r

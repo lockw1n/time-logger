@@ -1,9 +1,10 @@
 import axios from "axios";
+import { toYMD } from "../utils/date";
 
 const API_URL = "/api/entries";
 
 export async function createEntry(entry) {
-    const dateStr = entry.date ? entry.date : new Date().toISOString().split("T")[0]; // YYYY-MM-DD in UTC
+    const dateStr = entry.date ? entry.date : toYMD(new Date());
     const payload = {
         consultant_id: 1,
         company_id: 1,
@@ -15,10 +16,9 @@ export async function createEntry(entry) {
 }
 
 export async function updateEntry(id, entry) {
-    const payload = { ...entry };
-    if (entry.date) {
-        payload.date = entry.date;
-    }
+    const payload = {};
+    if (entry.duration_minutes !== undefined) payload.duration_minutes = entry.duration_minutes;
+    if (entry.comment !== undefined) payload.comment = entry.comment;
     const res = await axios.put(`${API_URL}/${id}`, payload);
     return res.data;
 }

@@ -22,10 +22,19 @@ const formatHours = (val = 0) => {
 export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellOpen}) {
     return (
         <div className="overflow-x-auto shadow-lg rounded-xl bg-gray-800 border border-gray-700">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse text-sm table-fixed">
+                <colgroup>
+                    <col className="w-[140px]" />
+                    <col className="w-[40px]" />
+                    {days.map((d) => (
+                        <col key={toLocalKey(d)} className="w-16" />
+                    ))}
+                    <col className="w-16" />
+                </colgroup>
                 <thead className="bg-gray-700 text-gray-200 sticky top-0">
                 <tr>
                     <th className="px-4 py-2 text-left min-w-[140px]">Ticket</th>
+                    <th className="px-2 py-2 text-center min-w-[40px]" aria-label="Activity"></th>
                     {days.map((d, idx) => {
                         const weekend = isWeekend(d);
                         const startOfSecondWeek = idx === 7;
@@ -53,10 +62,24 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                 <tbody>
                 {rows.map((row, rowIdx) => (
                     <tr
-                        key={row.ticket?.code || row.ticket?.id || rowIdx}
+                        key={`${row.ticket?.id || row.ticket?.code || rowIdx}-${row.activity?.id || "activity"}`}
                         className="border-t border-gray-700 hover:bg-gray-750 transition-colors"
                     >
-                        <td className="px-4 py-2 font-medium text-blue-300 min-w-[140px]">{row.ticket?.code || "—"}</td>
+                        <td className="px-4 py-2 font-medium text-blue-300 min-w-[140px] whitespace-nowrap truncate">
+                            {row.ticket?.code || "—"}
+                        </td>
+                        <td
+                            className="px-2 py-2 text-gray-200 min-w-[40px]"
+                            title={row.activity?.name || "No activity"}
+                        >
+                            <div className="flex items-center justify-center">
+                                <span
+                                    className="h-5 w-5 rounded-full border border-gray-600"
+                                    style={{ backgroundColor: row.activity?.color || "#6b7280" }}
+                                    aria-hidden="true"
+                                />
+                            </div>
+                        </td>
 
                         {days.map((d, idx) => {
                             const key = toLocalKey(d);
@@ -69,11 +92,10 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                                 <TimesheetCell
                                     key={key}
                                     entry={entry}
-                                    label={row.label?.name}
                                     color={row.color}
                                     weekend={weekend}
                                     extraClass={separatorClass}
-                                    onOpen={() => onCellOpen({ticket: row.ticket, label: row.label, date: d, entry})}
+                                    onOpen={() => onCellOpen({ticket: row.ticket, activity: row.activity, date: d, entry})}
                                 />
                             );
                         })}
