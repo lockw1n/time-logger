@@ -1,105 +1,20 @@
-import React, { useState } from "react";
-import { createEntry, updateEntry, deleteEntry } from "./api/entries";
+import React from "react";
 import TimesheetTable from "./components/TimesheetTable";
 import TimeLogModal from "./components/TimeLogModal";
 import InvoiceGenerator from "./components/InvoiceGenerator";
 import { useTimesheet } from "./hooks/useTimesheet";
 import { useActivities } from "./hooks/useActivities";
-import { toYMD } from "./utils/date";
-import { parseHoursInput } from "./utils/time";
+import { useTimeLogForm } from "./hooks/useTimeLogForm";
 
 export default function App() {
     const { days, rows, totals, rangeLabel, goToNextWeek, goToPreviousWeek, refresh } =
         useTimesheet();
     const { activities, loading: activitiesLoading, error: activitiesError } = useActivities(1);
-
-    const [adding, setAdding] = useState(false);
-    const [activeEntryId, setActiveEntryId] = useState(null);
-    const [newTicket, setNewTicket] = useState("");
-    const [newActivityId, setNewActivityId] = useState(null);
-    const [newHours, setNewHours] = useState("");
-    const [newDate, setNewDate] = useState(() => toYMD(new Date()));
-    const [errors, setErrors] = useState({});
-    const [fieldsLocked, setFieldsLocked] = useState(false);
-
-    const activityOptions = activities;
-    const getDefaultActivityId = () =>
-        activityOptions.find((option) => option.id !== null && option.id !== undefined)?.id ?? null;
-
-    const openLogForm = ({ ticket = "", activity = null, date = new Date(), entry = null, locked = false }) => {
-        const resolvedActivityId = activity?.id ?? getDefaultActivityId();
-        const resolvedTicketCode = ticket?.code || "";
-        setActiveEntryId(entry?.id ?? null);
-        setNewTicket(resolvedTicketCode);
-        setNewActivityId(resolvedActivityId);
-        setNewHours(entry ? String(entry.hours ?? "") : "");
-        setNewDate(toYMD(date));
-        setErrors({});
-        setFieldsLocked(locked);
-        setAdding(true);
-    };
-
-    const resetFormState = () => {
-        setActiveEntryId(null);
-        setNewTicket("");
-        setNewActivityId(getDefaultActivityId());
-        setNewHours("");
-        setNewDate(toYMD(new Date()));
-        setErrors({});
-        setFieldsLocked(false);
-    };
-
-    const handleAddRow = async (ticketCode, activityId, hours, dateValue) => {
-        const nextErrors = {};
-        const trimmedTicket = (ticketCode || "").trim();
-        const selectedActivity = activityOptions.find((opt) => String(opt.id) === String(activityId));
-        const hoursNum = parseHoursInput(hours);
-        const hasDate = Boolean(dateValue);
-        const hasActivity = Boolean(selectedActivity?.id);
-
-        if (!trimmedTicket) nextErrors.ticket = true;
-        if (!hasActivity) nextErrors.activity = true;
-        if (Number.isNaN(hoursNum) || hoursNum < 0 || hoursNum > 24) nextErrors.hours = true;
-        if (!hasDate) nextErrors.date = true;
-
-        if (Object.keys(nextErrors).length) {
-            setErrors(nextErrors);
-            return;
-        }
-
-        setErrors({});
-        const dateISO = (dateValue && dateValue.trim()) || toYMD(new Date());
-        const durationMinutes = Math.round(hoursNum * 60);
-        if (durationMinutes % 15 !== 0) {
-            setErrors({ hours: true });
-            return;
-        }
-
-        const payload = {
-            ticket_code: trimmedTicket,
-            activity_id: selectedActivity?.id,
-            date: dateISO,
-            duration_minutes: durationMinutes,
-        };
-
-        if (activeEntryId) {
-            await updateEntry(activeEntryId, { duration_minutes: payload.duration_minutes });
-        } else {
-            await createEntry(payload);
-        }
-        setAdding(false);
-        resetFormState();
-
-        refresh();
-    };
-
-    const handleDeleteActiveEntry = async () => {
-        if (!activeEntryId) return;
-        await deleteEntry(activeEntryId);
-        setAdding(false);
-        resetFormState();
-        refresh();
-    };
+    const { openNew, openFromCell, modalProps } = useTimeLogForm({
+        activities,
+        onSaved: refresh,
+        defaultDate: new Date(),
+    });
 
     return (
         <div className="min-h-screen p-6 flex flex-col items-center relative">
@@ -127,7 +42,7 @@ export default function App() {
                 </div>
                 <button
                     className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition"
-                    onClick={() => openLogForm({})}
+                    onClick={openNew}
                 >
                     Log time
                 </button>
@@ -138,46 +53,14 @@ export default function App() {
                     days={days}
                     rows={rows}
                     totalsByTicket={totals}
-                    onCellOpen={({ ticket, activity, date, entry }) =>
-                        openLogForm({ ticket, activity, date, entry, locked: true })
-                    }
+                    onCellOpen={openFromCell}
                 />
             </div>
 
             <TimeLogModal
-                open={adding}
-                ticket={newTicket}
-                activityId={newActivityId}
-                activityOptions={activityOptions}
-                hours={newHours}
-                date={newDate}
-                errors={errors}
+                {...modalProps}
                 loadingActivities={activitiesLoading}
                 activityError={activitiesError}
-                locked={fieldsLocked}
-                canDelete={Boolean(activeEntryId)}
-                onChangeTicket={(val) => {
-                    setNewTicket(val);
-                    setErrors((prev) => ({ ...prev, ticket: false }));
-                }}
-                onChangeActivity={(val) => {
-                    setNewActivityId(val);
-                    setErrors((prev) => ({ ...prev, activity: false }));
-                }}
-                onChangeHours={(val) => {
-                    setNewHours(val);
-                    setErrors((prev) => ({ ...prev, hours: false }));
-                }}
-                onChangeDate={(val) => {
-                    setNewDate(val);
-                    setErrors((prev) => ({ ...prev, date: false }));
-                }}
-                onCancel={() => {
-                    setAdding(false);
-                    resetFormState();
-                }}
-                onSave={() => handleAddRow(newTicket, newActivityId, newHours, newDate)}
-                onDelete={handleDeleteActiveEntry}
             />
 
             <InvoiceGenerator />
