@@ -1,6 +1,13 @@
 import React from "react";
 import TimesheetCell from "./TimesheetCell";
 
+const COLORS = {
+    red: "bg-red-500/60 border-red-400/40",
+    blue: "bg-blue-500/60 border-blue-400/40",
+    green: "bg-green-500/60 border-green-400/40",
+    yellow: "bg-yellow-500/60 border-yellow-400/40",
+};
+
 const toLocalKey = (date) => {
     const d = new Date(date);
     const pad = (n) => String(n).padStart(2, "0");
@@ -73,11 +80,22 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                             title={row.activity?.name || "No activity"}
                         >
                             <div className="flex items-center justify-center">
-                                <span
-                                    className="h-5 w-5 rounded-full border border-gray-600"
-                                    style={{ backgroundColor: row.activity?.color || "#6b7280" }}
-                                    aria-hidden="true"
-                                />
+                                {(() => {
+                                    const paletteKey = (row.color || "").toLowerCase();
+                                    const swatchClass = COLORS[paletteKey] || "bg-gray-700/60 border-gray-600";
+                                    const hasCustomColor = row.color && !COLORS[paletteKey];
+                                    const swatchStyle = hasCustomColor
+                                        ? { backgroundColor: row.color, borderColor: row.color }
+                                        : undefined;
+
+                                    return (
+                                        <span
+                                            className={`h-4 w-4 border ${swatchClass}`}
+                                            style={swatchStyle}
+                                            aria-hidden="true"
+                                        />
+                                    );
+                                })()}
                             </div>
                         </td>
 
