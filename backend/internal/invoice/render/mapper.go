@@ -2,6 +2,7 @@ package render
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/lockw1n/time-logger/internal/constants"
@@ -12,6 +13,8 @@ import (
 )
 
 func MapInvoiceToHTMLView(invoice domain.Invoice) html.InvoiceView {
+	currency := invoice.Contract.Currency
+
 	return html.InvoiceView{
 		Number:     invoice.Number,
 		IssuedAt:   formatDate(invoice.IssuedAt),
@@ -20,8 +23,8 @@ func MapInvoiceToHTMLView(invoice domain.Invoice) html.InvoiceView {
 		Consultant: mapConsultantToHTMLView(invoice),
 		Company:    mapCompanyToHTMLView(invoice),
 		Contract:   mapContractToHTMLView(invoice),
-		Activities: mapActivitiesToHTMLView(invoice.Activities, invoice.Company.NameShort),
-		Totals:     mapTotalsToHTMLView(invoice.Totals),
+		Activities: mapActivitiesToHTMLView(invoice.Activities, currency, invoice.Company.NameShort),
+		Totals:     mapTotalsToHTMLView(invoice.Totals, currency),
 	}
 }
 
@@ -72,15 +75,19 @@ func mapContractToHTMLView(invoice domain.Invoice) html.ContractView {
 	}
 }
 
-func mapActivitiesToHTMLView(activities []domain.InvoiceActivity, companyShort *string) []html.ActivityView {
+func mapActivitiesToHTMLView(
+	activities []domain.InvoiceActivity,
+	currency string,
+	companyShort *string,
+) []html.ActivityView {
 	out := make([]html.ActivityView, 0, len(activities))
 
 	for _, activity := range activities {
 		out = append(out, html.ActivityView{
 			Title:               activityTitle(companyShort, activity.Name),
 			TotalHoursFormatted: formatHours(activity.TotalHours),
-			HourlyRateFormatted: formatMoney(activity.HourlyRate, ""),
-			SubtotalFormatted:   formatCents(activity.Subtotal),
+			HourlyRateFormatted: formatMoney(activity.HourlyRate, currency),
+			SubtotalFormatted:   formatCents(activity.Subtotal, currency),
 			Entries:             mapEntriesToHTMLView(activity.Entries),
 		})
 	}
@@ -102,10 +109,10 @@ func mapEntriesToHTMLView(entries []domain.InvoiceEntry) []html.EntryView {
 	return out
 }
 
-func mapTotalsToHTMLView(totals domain.InvoiceTotals) html.TotalsView {
+func mapTotalsToHTMLView(totals domain.InvoiceTotals, currency string) html.TotalsView {
 	return html.TotalsView{
 		TotalHoursFormatted: formatHours(totals.TotalHours),
-		SubtotalFormatted:   formatCents(totals.Subtotal),
+		SubtotalFormatted:   formatCents(totals.Subtotal, currency),
 	}
 }
 
@@ -162,7 +169,7 @@ func formatDate(t time.Time) string {
 }
 
 func formatHours(h float64) string {
-	return fmt.Sprintf("%.2f", h)
+	return strconv.FormatFloat(h, 'f', -1, 64)
 }
 
 func formatMoney(amount float64, currency string) string {
@@ -171,6 +178,14 @@ func formatMoney(amount float64, currency string) string {
 	}
 	sign := currencySign(currency)
 	return fmt.Sprintf("%s%.2f", sign, amount)
+}
+
+func formatCents(cents int64, currency string) string {
+	if currency == "" {
+		return fmt.Sprintf("%.2f", float64(cents)/100)
+	}
+	sign := currencySign(currency)
+	return fmt.Sprintf("%s%.2f", sign, float64(cents)/100)
 }
 
 func currencySign(currency string) string {
@@ -184,10 +199,6 @@ func currencySign(currency string) string {
 	default:
 		return currency
 	}
-}
-
-func formatCents(cents int64) string {
-	return fmt.Sprintf("%.2f", float64(cents)/100)
 }
 
 func stringPtr(s *string) *string {
