@@ -135,7 +135,7 @@ func (s *service) GetEntry(ctx context.Context, id uint64) (domain.Entry, error)
 
 func (s *service) resolveTicket(ctx context.Context, companyID uint64, code string) (ticketdomain.Ticket, error) {
 
-	code = strings.ToUpper(strings.TrimSpace(code))
+	code = strings.TrimSpace(code)
 
 	ticket, err := s.ticketRepo.FindByCompanyAndCode(ctx, companyID, code)
 	if err == nil {
