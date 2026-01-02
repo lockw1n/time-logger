@@ -8,18 +8,20 @@ import (
 )
 
 type TimesheetResponse struct {
-	ConsultantID uint64                 `json:"consultant_id"`
-	CompanyID    uint64                 `json:"company_id"`
-	Start        string                 `json:"start"`
-	End          string                 `json:"end"`
-	Rows         []TimesheetRowResponse `json:"rows"`
+	ConsultantID uint64                  `json:"consultant_id"`
+	CompanyID    uint64                  `json:"company_id"`
+	Start        string                  `json:"start"`
+	End          string                  `json:"end"`
+	Rows         []TimesheetRowResponse  `json:"rows"`
+	Totals       TimesheetTotalsResponse `json:"totals"`
 }
 
 type TimesheetRowResponse struct {
-	Ticket   TimesheetTicketResponse   `json:"ticket"`
-	Activity TimesheetActivityResponse `json:"activity"`
-	Entries  []TimesheetEntryResponse  `json:"entries"`
-	Total    int                       `json:"total"`
+	Ticket        TimesheetTicketResponse   `json:"ticket"`
+	Activity      TimesheetActivityResponse `json:"activity"`
+	Entries       []TimesheetEntryResponse  `json:"entries"`
+	PerDayMinutes map[string]int            `json:"per_day_minutes"`
+	TotalMinutes  int                       `json:"total_minutes"`
 }
 
 type TimesheetTicketResponse struct {
@@ -47,6 +49,11 @@ type TimesheetEntryResponse struct {
 	Comment         *string `json:"comment"`
 }
 
+type TimesheetTotalsResponse struct {
+	PerDayMinutes  map[string]int `json:"per_day_minutes"`
+	OverallMinutes int            `json:"overall_minutes"`
+}
+
 func toResponse(timesheet domain.Timesheet) TimesheetResponse {
 	return TimesheetResponse{
 		ConsultantID: timesheet.ConsultantID,
@@ -54,6 +61,7 @@ func toResponse(timesheet domain.Timesheet) TimesheetResponse {
 		Start:        timesheet.Start.Format(constants.ResponseDateFormat),
 		End:          timesheet.End.Format(constants.ResponseDateFormat),
 		Rows:         toRowResponse(timesheet.Rows),
+		Totals:       toTotalsResponse(timesheet.Totals),
 	}
 }
 
@@ -61,10 +69,11 @@ func toRowResponse(rows []domain.TimesheetRow) []TimesheetRowResponse {
 	resp := make([]TimesheetRowResponse, 0, len(rows))
 	for _, row := range rows {
 		resp = append(resp, TimesheetRowResponse{
-			Ticket:   toTicketResponse(row.Ticket),
-			Activity: toActivityResponse(row.Activity),
-			Entries:  toEntryResponse(row.Entries),
-			Total:    row.Total,
+			Ticket:        toTicketResponse(row.Ticket),
+			Activity:      toActivityResponse(row.Activity),
+			Entries:       toEntryResponse(row.Entries),
+			PerDayMinutes: row.PerDayMinutes,
+			TotalMinutes:  row.TotalMinutes,
 		})
 	}
 	return resp
@@ -103,4 +112,11 @@ func toEntryResponse(entries []domain.TimesheetEntry) []TimesheetEntryResponse {
 		})
 	}
 	return resp
+}
+
+func toTotalsResponse(totals domain.TimesheetTotals) TimesheetTotalsResponse {
+	return TimesheetTotalsResponse{
+		PerDayMinutes:  totals.PerDayMinutes,
+		OverallMinutes: totals.OverallMinutes,
+	}
 }

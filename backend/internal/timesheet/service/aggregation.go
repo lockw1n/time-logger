@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	activitydomain "github.com/lockw1n/time-logger/internal/activity/domain"
 	entrydomain "github.com/lockw1n/time-logger/internal/entry/domain"
@@ -50,10 +51,11 @@ func groupEntries(
 			}
 
 			row = &domain.TimesheetRow{
-				Ticket:   ticket,
-				Activity: activity,
-				Entries:  make([]domain.TimesheetEntry, 0),
-				Total:    0,
+				Ticket:        ticket,
+				Activity:      activity,
+				Entries:       make([]domain.TimesheetEntry, 0),
+				PerDayMinutes: make(map[string]int),
+				TotalMinutes:  0,
 			}
 
 			rowsByKey[key] = row
@@ -66,15 +68,26 @@ func groupEntries(
 			Comment:         entry.Comment,
 		})
 
-		row.Total += entry.DurationMinutes
+		day := dayKey(entry.Date)
+		row.PerDayMinutes[day] += entry.DurationMinutes
 	}
 
 	rows := make([]domain.TimesheetRow, 0, len(rowsByKey))
 	for _, row := range rowsByKey {
+		total := 0
+		for _, minutes := range row.PerDayMinutes {
+			total += minutes
+		}
+		row.TotalMinutes = total
+
 		rows = append(rows, *row)
 	}
 
 	return rows
+}
+
+func dayKey(t time.Time) string {
+	return t.UTC().Format("2006-01-02")
 }
 
 func sortRowsByTicketCode(rows []domain.TimesheetRow) {

@@ -13,13 +13,15 @@ type Timesheet struct {
 	Start        time.Time
 	End          time.Time
 	Rows         []TimesheetRow
+	Totals       TimesheetTotals
 }
 
 type TimesheetRow struct {
-	Ticket   ticketdomain.Ticket
-	Activity activitydomain.Activity
-	Entries  []TimesheetEntry
-	Total    int
+	Ticket        ticketdomain.Ticket
+	Activity      activitydomain.Activity
+	Entries       []TimesheetEntry
+	PerDayMinutes map[string]int
+	TotalMinutes  int
 }
 
 type TimesheetEntry struct {
@@ -27,4 +29,9 @@ type TimesheetEntry struct {
 	Date            time.Time
 	DurationMinutes int
 	Comment         *string
+}
+
+type TimesheetTotals struct {
+	PerDayMinutes  map[string]int
+	OverallMinutes int
 }

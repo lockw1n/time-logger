@@ -8,8 +8,16 @@ import { useActivities } from "./hooks/useActivities";
 import { useTimeLogForm } from "./hooks/useTimeLogForm";
 
 export default function App() {
-    const { days, rows, totals, rangeLabel, goToNextWeek, goToPreviousWeek, refresh } =
-        useTimesheet();
+    const {
+        days,
+        rows,
+        totalsPerDayMinutes,
+        overallMinutes,
+        rangeLabel,
+        goToNextWeek,
+        goToPreviousWeek,
+        refresh,
+    } = useTimesheet();
     const { activities, loading: activitiesLoading, error: activitiesError } = useActivities(1);
     const { openNew, openFromCell, modalProps } = useTimeLogForm({
         activities,
@@ -41,7 +49,8 @@ export default function App() {
                 <TimesheetTable
                     days={days}
                     rows={rows}
-                    totalsByTicket={totals}
+                    totalsPerDayMinutes={totalsPerDayMinutes}
+                    overallMinutes={overallMinutes}
                     onCellOpen={openFromCell}
                 />
             </div>

@@ -46,12 +46,18 @@ func (s *service) GenerateTimesheet(ctx context.Context, input GenerateTimesheet
 	}
 
 	if len(entries) == 0 {
+		totals := domain.TimesheetTotals{
+			PerDayMinutes:  map[string]int{},
+			OverallMinutes: 0,
+		}
+
 		return domain.Timesheet{
 			ConsultantID: input.ConsultantID,
 			CompanyID:    input.CompanyID,
 			Start:        input.Start,
 			End:          input.End,
 			Rows:         []domain.TimesheetRow{},
+			Totals:       totals,
 		}, nil
 	}
 
@@ -85,6 +91,17 @@ func (s *service) GenerateTimesheet(ctx context.Context, input GenerateTimesheet
 
 	rows := groupEntries(entries, ticketsByID, activitiesByID)
 	sortRowsByTicketCode(rows)
+	totals := aggregateTotals(rows)
+
+	if totals.OverallMinutes < 0 {
+		panic("timesheet invariant violated: negative total minutes")
+	}
+
+	for _, row := range rows {
+		if row.TotalMinutes < 0 {
+			panic("timesheet invariant violated: negative row minutes")
+		}
+	}
 
 	return domain.Timesheet{
 		ConsultantID: input.ConsultantID,
@@ -92,7 +109,25 @@ func (s *service) GenerateTimesheet(ctx context.Context, input GenerateTimesheet
 		Start:        input.Start,
 		End:          input.End,
 		Rows:         rows,
+		Totals:       totals,
 	}, nil
+}
+
+func aggregateTotals(rows []domain.TimesheetRow) domain.TimesheetTotals {
+	perDay := make(map[string]int)
+	overall := 0
+
+	for _, row := range rows {
+		for day, minutes := range row.PerDayMinutes {
+			perDay[day] += minutes
+			overall += minutes
+		}
+	}
+
+	return domain.TimesheetTotals{
+		PerDayMinutes:  perDay,
+		OverallMinutes: overall,
+	}
 }
 
 func keys[K comparable](m map[K]struct{}) []K {

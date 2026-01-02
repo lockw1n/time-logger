@@ -1,5 +1,6 @@
 import React from "react";
 import TimesheetCell from "./TimesheetCell";
+import { getStartOfWeek } from "../utils/date";
 
 const COLORS = {
     red: "bg-red-500/60 border-red-400/40",
@@ -26,15 +27,36 @@ const formatHours = (val = 0) => {
     return rounded.toFixed(2).replace(/\.?0+$/, "");
 };
 
-export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellOpen}) {
+const getWeekKey = (date) => toLocalKey(getStartOfWeek(date));
+
+const sumMinutesForDays = (perDayMinutes, days) =>
+    days.reduce((total, day) => total + (perDayMinutes?.[toLocalKey(day)] ?? 0), 0);
+
+export default function TimesheetTable({
+    days,
+    rows,
+    totalsPerDayMinutes = {},
+    overallMinutes = 0,
+    onCellOpen,
+}) {
+    const firstWeekKey = days.length ? getWeekKey(days[0]) : null;
+    const secondWeekStartIndex = days.findIndex((day) => getWeekKey(day) !== firstWeekKey);
+    const splitIndex = secondWeekStartIndex === -1 ? days.length : secondWeekStartIndex;
+    const firstWeekDays = days.slice(0, splitIndex);
+    const secondWeekDays = days.slice(splitIndex);
+    const separatorClass = "border-r-8 border-r-slate-400";
     return (
-        <div className="overflow-x-auto shadow-lg rounded-xl bg-gray-800 border border-gray-700">
+        <div className="shadow-lg rounded-xl bg-gray-800 border border-gray-700">
             <table className="w-full border-collapse text-sm table-fixed">
                 <colgroup>
                     <col className="w-[140px]" />
                     <col className="w-[40px]" />
-                    {days.map((d) => (
-                        <col key={toLocalKey(d)} className="w-16" />
+                    {firstWeekDays.map((d) => (
+                        <col key={toLocalKey(d)} className="w-12" />
+                    ))}
+                    <col className="w-16" />
+                    {secondWeekDays.map((d) => (
+                        <col key={toLocalKey(d)} className="w-12" />
                     ))}
                     <col className="w-16" />
                 </colgroup>
@@ -42,14 +64,12 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                 <tr>
                     <th className="px-4 py-2 text-left min-w-[140px]">Ticket</th>
                     <th className="px-2 py-2 text-center min-w-[40px]" aria-label="Activity"></th>
-                    {days.map((d, idx) => {
+                    {firstWeekDays.map((d) => {
                         const weekend = isWeekend(d);
-                        const startOfSecondWeek = idx === 7;
-                        const separatorClass = startOfSecondWeek ? "border-l-8 border-l-slate-400" : "";
                         return (
                             <th
                                 key={toLocalKey(d)}
-                                className={`px-3 py-2 text-center w-20 ${weekend ? "bg-slate-700 text-slate-100" : ""} ${separatorClass}`}
+                                className={`px-1 py-2 text-center w-12 ${weekend ? "bg-slate-700 text-slate-100" : ""}`}
                             >
                                 <div className="flex flex-col items-center leading-tight">
                                     <span className="font-semibold">
@@ -62,7 +82,26 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                             </th>
                         );
                     })}
-                    <th className="px-3 py-2 text-center w-20">Total</th>
+                    <th className={`px-2 py-2 text-center w-16 ${separatorClass}`}>Total</th>
+                    {secondWeekDays.map((d) => {
+                        const weekend = isWeekend(d);
+                        return (
+                            <th
+                                key={toLocalKey(d)}
+                                className={`px-1 py-2 text-center w-12 ${weekend ? "bg-slate-700 text-slate-100" : ""}`}
+                            >
+                                <div className="flex flex-col items-center leading-tight">
+                                    <span className="font-semibold">
+                                        {d.toLocaleDateString(undefined, {weekday: "short"})}
+                                    </span>
+                                    <span className="text-xs text-gray-300">
+                                        {d.toLocaleDateString(undefined, {month: "short"})} {d.getDate()}
+                                    </span>
+                                </div>
+                            </th>
+                        );
+                    })}
+                    <th className="px-2 py-2 text-center w-16">Total</th>
                 </tr>
                 </thead>
 
@@ -99,12 +138,10 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                             </div>
                         </td>
 
-                        {days.map((d, idx) => {
+                        {firstWeekDays.map((d) => {
                             const key = toLocalKey(d);
                             const entry = row.cells[key];
                             const weekend = isWeekend(d);
-                            const startOfSecondWeek = idx === 7;
-                            const separatorClass = startOfSecondWeek ? "border-l-8 border-l-slate-400" : "";
 
                             return (
                                 <TimesheetCell
@@ -112,17 +149,56 @@ export default function TimesheetTable({days, rows, totalsByTicket = {}, onCellO
                                     entry={entry}
                                     color={row.color}
                                     weekend={weekend}
-                                    extraClass={separatorClass}
                                     onOpen={() => onCellOpen({ticket: row.ticket, activity: row.activity, date: d, entry})}
                                 />
                             );
                         })}
 
-                        <td className="px-3 py-2 text-center font-semibold text-gray-100">
-                            {formatHours(totalsByTicket[row.ticket?.code] || 0)}
+                        <td className={`px-2 py-2 text-center font-semibold text-gray-100 ${separatorClass}`}>
+                            {formatHours(sumMinutesForDays(row.perDayMinutes, firstWeekDays) / 60)}
+                        </td>
+
+                        {secondWeekDays.map((d) => {
+                            const key = toLocalKey(d);
+                            const entry = row.cells[key];
+                            const weekend = isWeekend(d);
+
+                            return (
+                                <TimesheetCell
+                                    key={key}
+                                    entry={entry}
+                                    color={row.color}
+                                    weekend={weekend}
+                                    onOpen={() => onCellOpen({ticket: row.ticket, activity: row.activity, date: d, entry})}
+                                />
+                            );
+                        })}
+
+                        <td className="px-2 py-2 text-center font-semibold text-gray-100">
+                            {formatHours(sumMinutesForDays(row.perDayMinutes, secondWeekDays) / 60)}
                         </td>
                     </tr>
                 ))}
+                <tr className="border-t border-gray-600 bg-gray-700/60">
+                    <td className="px-4 py-2 font-semibold text-gray-100">Total</td>
+                    <td className="px-2 py-2"></td>
+                    {firstWeekDays.map((d) => (
+                        <td key={toLocalKey(d)} className="px-1 py-2 text-center font-semibold text-gray-100">
+                            {formatHours((totalsPerDayMinutes[toLocalKey(d)] ?? 0) / 60)}
+                        </td>
+                    ))}
+                    <td className={`px-2 py-2 text-center font-semibold text-gray-100 ${separatorClass}`}>
+                        {formatHours(sumMinutesForDays(totalsPerDayMinutes, firstWeekDays) / 60)}
+                    </td>
+                    {secondWeekDays.map((d) => (
+                        <td key={toLocalKey(d)} className="px-1 py-2 text-center font-semibold text-gray-100">
+                            {formatHours((totalsPerDayMinutes[toLocalKey(d)] ?? 0) / 60)}
+                        </td>
+                    ))}
+                    <td className="px-2 py-2 text-center font-semibold text-gray-100">
+                        {formatHours(sumMinutesForDays(totalsPerDayMinutes, secondWeekDays) / 60)}
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>

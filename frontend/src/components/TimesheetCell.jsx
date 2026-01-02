@@ -20,7 +20,7 @@ export default function TimesheetCell({ entry, color, onOpen, weekend = false, e
 
     return (
         <td
-            className={`${bgColor} ${weekendTint} text-center px-2 py-2 border cursor-pointer transition hover:brightness-110 w-20 ${extraClass}`}
+            className={`${bgColor} ${weekendTint} text-center px-1 py-1 border cursor-pointer transition hover:brightness-110 w-12 ${extraClass}`}
             style={customStyle}
             onClick={onOpen}
         >

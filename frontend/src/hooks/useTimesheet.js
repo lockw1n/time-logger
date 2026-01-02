@@ -17,15 +17,16 @@ const buildRangeParams = (anchor) => {
     };
 };
 
-const buildRowsFromTimesheet = (rows) => {
+const buildRowsFromTimesheet = (rows, totalsPayload = {}) => {
     const tableRows = [];
-    const totals = {};
     const ticketMap = new Map();
 
     rows.forEach((row) => {
         const ticketId = row.ticket?.id ?? null;
         const ticketCode = row.ticket?.code || "—";
         const cells = {};
+        const perDayMinutes = row.per_day_minutes || {};
+        const entryByDate = {};
 
         if (ticketId !== null) {
             const key = String(ticketId);
@@ -38,11 +39,16 @@ const buildRowsFromTimesheet = (rows) => {
             const parsedDate = parseDMY(entry.date);
             if (!parsedDate) return;
             const dateKey = toYMD(parsedDate);
+            entryByDate[dateKey] = entry;
+        });
+
+        Object.entries(perDayMinutes).forEach(([dateKey, minutes]) => {
+            const entry = entryByDate[dateKey];
+            const hours = (minutes || 0) / 60;
             cells[dateKey] = {
-                id: entry.id,
-                date: parsedDate,
-                hours: (entry.duration_minutes || 0) / 60,
-                comment: entry.comment,
+                id: entry?.id ?? null,
+                hours,
+                comment: entry?.comment,
             };
         });
 
@@ -55,14 +61,16 @@ const buildRowsFromTimesheet = (rows) => {
             },
             color: (row.activity?.color || "").toLowerCase(),
             cells,
+            perDayMinutes,
+            totalMinutes: row.total_minutes || 0,
         });
-
-        totals[ticketCode] = (totals[ticketCode] || 0) + (row.total || 0) / 60;
     });
 
     const ticketOptions = Array.from(ticketMap.values());
+    const totalsPerDayMinutes = totalsPayload?.per_day_minutes || {};
+    const overallMinutes = totalsPayload?.overall_minutes || 0;
 
-    return { tableRows, totals, ticketOptions };
+    return { tableRows, ticketOptions, totalsPerDayMinutes, overallMinutes };
 };
 
 export function useTimesheet() {
@@ -74,7 +82,8 @@ export function useTimesheet() {
     const [anchorDate, setAnchorDate] = useState(initialAnchor);
     const [days, setDays] = useState(() => getWeekDays(initialAnchor, DAYS_WINDOW));
     const [rows, setRows] = useState([]);
-    const [totals, setTotals] = useState({});
+    const [totalsPerDayMinutes, setTotalsPerDayMinutes] = useState({});
+    const [overallMinutes, setOverallMinutes] = useState(0); // minutes from API; render converts to hours
     const [ticketOptions, setTicketOptions] = useState([]);
 
     useEffect(() => {
@@ -85,10 +94,12 @@ export function useTimesheet() {
         async (anchor = anchorDate) => {
             const { startStr, endStr } = buildRangeParams(anchor);
             const data = await getTimesheet({ start: startStr, end: endStr });
-            const { tableRows, totals, ticketOptions } = buildRowsFromTimesheet(data?.rows || []);
+            const { tableRows, ticketOptions, totalsPerDayMinutes, overallMinutes } =
+                buildRowsFromTimesheet(data?.rows || [], data?.totals || {});
             setRows(tableRows);
-            setTotals(totals);
             setTicketOptions(ticketOptions);
+            setTotalsPerDayMinutes(totalsPerDayMinutes);
+            setOverallMinutes(overallMinutes);
         },
         [anchorDate]
     );
@@ -130,7 +141,8 @@ export function useTimesheet() {
         anchorDate,
         days,
         rows,
-        totals,
+        totalsPerDayMinutes,
+        overallMinutes,
         rangeLabel,
         refresh,
         ticketOptions,
