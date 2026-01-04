@@ -1,4 +1,4 @@
-import axios from "axios";
+import { apiPost } from "./client";
 
 const INVOICE_URL = "/api/invoices/generate";
 
@@ -17,8 +17,9 @@ const buildMonthRange = (month) => {
     return { start: toYMD(start), end: toYMD(end) };
 };
 
-const extractFileMeta = (headers = {}) => {
-    const disposition = String(headers["content-disposition"] || "");
+const extractFileMeta = (headers) => {
+    const headerValue = headers?.get ? headers.get("content-disposition") : headers?.["content-disposition"];
+    const disposition = String(headerValue || "");
     const isInline = disposition.toLowerCase().includes("inline");
 
     let filename = "invoice.pdf";
@@ -38,25 +39,20 @@ const extractFileMeta = (headers = {}) => {
 const invalidMonthError = new Error("invalid month");
 invalidMonthError.code = "invalid_month";
 
-export async function generateMonthlyInvoicePdf({ month, consultantId = 1, companyId = 1 } = {}) {
+export async function generateMonthlyInvoicePdf({ month, companyId = 1 } = {}) {
     const range = buildMonthRange(month);
     if (!range) {
         throw invalidMonthError;
     }
-    const res = await axios.post(
-        INVOICE_URL,
-        null,
-        {
-            params: {
-                consultant_id: consultantId,
-                company_id: companyId,
-                start: range.start,
-                end: range.end,
-                format: "pdf",
-            },
-            responseType: "blob",
-        }
-    );
+    const res = await apiPost(INVOICE_URL, {
+        params: {
+            company_id: companyId,
+            start: range.start,
+            end: range.end,
+            format: "pdf",
+        },
+        responseType: "blob",
+    });
 
     const { filename, isInline } = extractFileMeta(res.headers);
 
@@ -67,27 +63,22 @@ export async function generateMonthlyInvoicePdf({ month, consultantId = 1, compa
     };
 }
 
-export async function generateMonthlyInvoiceExcel({ month, consultantId = 1, companyId = 1 } = {}) {
+export async function generateMonthlyInvoiceExcel({ month, companyId = 1 } = {}) {
     const range = buildMonthRange(month);
     if (!range) {
         throw invalidMonthError;
     }
-    const res = await axios.post(
-        INVOICE_URL,
-        null,
-        {
-            params: {
-                consultant_id: consultantId,
-                company_id: companyId,
-                start: range.start,
-                end: range.end,
-                format: "excel",
-            },
-            responseType: "blob",
-        }
-    );
+    const res = await apiPost(INVOICE_URL, {
+        params: {
+            company_id: companyId,
+            start: range.start,
+            end: range.end,
+            format: "excel",
+        },
+        responseType: "blob",
+    });
 
-    const disposition = res.headers["content-disposition"] || "";
+    const disposition = res.headers.get("content-disposition") || "";
     let filename = "invoice.xlsx";
 
     const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);

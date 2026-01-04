@@ -10,7 +10,7 @@ func (AddAuthFields) Name() string {
 
 func (AddAuthFields) Run(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		const defaultHash = "$2a$10$N9qo8uLOickgx2ZMRZo4i.eWJk2zF4Y4Q6ZJxP9YxV9r7k4dQwYq6" // "change-me"
+		const defaultHash = "$2a$10$wshPCvZO/WSRFqq38sLX9eIs7LY1YsqsHAoo6cA3vj6O92Ao4tUi." // "change-me"
 
 		if err := tx.Exec(`
 			UPDATE consultants

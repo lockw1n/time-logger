@@ -1,67 +1,38 @@
-import React from "react";
-import TimesheetTable from "./components/TimesheetTable";
-import TimeLogModal from "./components/TimeLogModal";
-import InvoiceGenerator from "./components/InvoiceGenerator";
-import WeekNavigator from "./components/WeekNavigator";
-import { useTimesheet } from "./hooks/useTimesheet";
-import { useActivities } from "./hooks/useActivities";
-import { useTimeLogForm } from "./hooks/useTimeLogForm";
+import React, { useEffect, useState } from "react";
+import Login from "./pages/Login";
+import { useAuth } from "./auth/AuthContext";
+import ProtectedApp from "./components/ProtectedApp";
 
 export default function App() {
-    const {
-        days,
-        rows,
-        totalsPerDayMinutes,
-        overallMinutes,
-        rangeLabel,
-        goToNextWeek,
-        goToPreviousWeek,
-        refresh,
-    } = useTimesheet();
-    const { activities, loading: activitiesLoading, error: activitiesError } = useActivities(1);
-    const { openNew, openFromCell, modalProps } = useTimeLogForm({
-        activities,
-        onSaved: refresh,
-        defaultDate: new Date(),
-    });
-
-    return (
-        <div className="min-h-screen p-6 flex flex-col items-center relative">
-            <h1 className="text-3xl font-bold mb-6 text-gray-100 flex items-center gap-2">
-                ⏱️ Time Logger <span className="text-gray-400">– Timesheet</span>
-            </h1>
-
-            <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4 text-gray-200">
-                <WeekNavigator
-                    label={rangeLabel}
-                    onPrev={goToPreviousWeek}
-                    onNext={goToNextWeek}
-                />
-                <button
-                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition"
-                    onClick={openNew}
-                >
-                    Log time
-                </button>
-            </div>
-
-            <div className="relative w-full max-w-6xl">
-                <TimesheetTable
-                    days={days}
-                    rows={rows}
-                    totalsPerDayMinutes={totalsPerDayMinutes}
-                    overallMinutes={overallMinutes}
-                    onCellOpen={openFromCell}
-                />
-            </div>
-
-            <TimeLogModal
-                {...modalProps}
-                loadingActivities={activitiesLoading}
-                activityError={activitiesError}
-            />
-
-            <InvoiceGenerator />
-        </div>
+    const { isAuthenticated, isInitializing } = useAuth();
+    const [path, setPath] = useState(
+        `${window.location.pathname}${window.location.search}`
     );
+
+    useEffect(() => {
+        const onPopState = () => {
+            setPath(`${window.location.pathname}${window.location.search}`);
+        };
+        window.addEventListener("popstate", onPopState);
+        return () => window.removeEventListener("popstate", onPopState);
+    }, []);
+
+    if (path.startsWith("/login")) {
+        if (isAuthenticated) {
+            window.history.replaceState(null, "", "/");
+            window.dispatchEvent(new PopStateEvent("popstate"));
+            return null;
+        }
+        return <Login />;
+    }
+
+    if (isInitializing) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-gray-400">
+                Loading…
+            </div>
+        );
+    }
+
+    return <ProtectedApp path={path} />;
 }
