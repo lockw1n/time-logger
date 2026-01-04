@@ -12,4 +12,5 @@ type Repository interface {
 	Delete(ctx context.Context, id uint64) error
 
 	FindByID(ctx context.Context, id uint64) (domain.Consultant, error)
+	FindByEmail(ctx context.Context, email string) (domain.Consultant, error)
 }

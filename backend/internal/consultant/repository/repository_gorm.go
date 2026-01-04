@@ -78,3 +78,20 @@ func (r *gormRepository) FindByID(ctx context.Context, id uint64) (domain.Consul
 
 	return toDomain(model), nil
 }
+
+func (r *gormRepository) FindByEmail(ctx context.Context, email string) (domain.Consultant, error) {
+	var model consultantModel
+
+	if err := r.db.WithContext(ctx).
+		Where("LOWER(email) = ?", email).
+		First(&model).Error; err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Consultant{}, ErrNotFound
+		}
+
+		return domain.Consultant{}, mapError(err)
+	}
+
+	return toDomain(model), nil
+}
