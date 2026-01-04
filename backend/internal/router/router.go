@@ -38,39 +38,43 @@ func SetupRouter(container *app.Container) *gin.Engine {
 
 	{
 		api.POST("/auth/login", authHandler.Login)
+
+		// just for now, will be moved to admin area later
+		api.POST("/companies", companyHandler.CreateCompany)
+		api.PUT("/companies/:id", companyHandler.UpdateCompany)
+		api.DELETE("/companies/:id", companyHandler.DeleteCompany)
+		api.GET("/companies/:id", companyHandler.GetCompany)
+		api.GET("/companies", companyHandler.ListCompanies)
+
+		api.POST("/activities", activityHandler.CreateActivity)
+		api.PUT("/activities/:id", activityHandler.UpdateActivity)
+		api.DELETE("/activities/:id", activityHandler.DeleteActivity)
+		api.GET("/activities/:id", activityHandler.GetActivity)
+		api.GET("/activities", activityHandler.ListActivitiesForCompany)
+
+		api.POST("/tickets", ticketHandler.CreateTicket)
+		api.PUT("/tickets/:id", ticketHandler.UpdateTicket)
+		api.DELETE("/tickets/:id", ticketHandler.DeleteTicket)
+		api.GET("/tickets/:id", ticketHandler.GetTicket)
+		api.GET("/tickets", ticketHandler.ListTicketsForCompany)
+
+		api.POST("/consultants", consultantHandler.CreateConsultant)
+		api.PUT("/consultants/:id", consultantHandler.UpdateConsultant)
+		api.DELETE("/consultants/:id", consultantHandler.DeleteConsultant)
+		api.GET("/consultants/:id", consultantHandler.GetConsultant)
+
+		api.POST("/contracts", contractHandler.CreateContract)
+		api.PUT("/contracts/:id", contractHandler.UpdateContract)
+		api.DELETE("/contracts/:id", contractHandler.DeleteContract)
+		api.GET("/contracts/:id", contractHandler.GetContract)
+		api.GET("/contracts", contractHandler.ListContractsForConsultant)
 	}
 
 	protected := api.Group("")
 	protected.Use(container.AuthMiddleware.RequireAuth())
 	{
-		protected.POST("/companies", companyHandler.CreateCompany)
-		protected.PUT("/companies/:id", companyHandler.UpdateCompany)
-		protected.DELETE("/companies/:id", companyHandler.DeleteCompany)
-		protected.GET("/companies/:id", companyHandler.GetCompany)
-		protected.GET("/companies", companyHandler.ListCompanies)
-
-		protected.POST("/consultants", consultantHandler.CreateConsultant)
-		protected.PUT("/consultants/:id", consultantHandler.UpdateConsultant)
-		protected.DELETE("/consultants/:id", consultantHandler.DeleteConsultant)
-		protected.GET("/consultants/:id", consultantHandler.GetConsultant)
-
-		protected.POST("/contracts", contractHandler.CreateContract)
-		protected.PUT("/contracts/:id", contractHandler.UpdateContract)
-		protected.DELETE("/contracts/:id", contractHandler.DeleteContract)
-		protected.GET("/contracts/:id", contractHandler.GetContract)
-		protected.GET("/contracts", contractHandler.ListContractsForConsultant)
-
-		protected.POST("/tickets", ticketHandler.CreateTicket)
-		protected.PUT("/tickets/:id", ticketHandler.UpdateTicket)
-		protected.DELETE("/tickets/:id", ticketHandler.DeleteTicket)
-		protected.GET("/tickets/:id", ticketHandler.GetTicket)
-		protected.GET("/tickets", ticketHandler.ListTicketsForCompany)
-
-		protected.POST("/activities", activityHandler.CreateActivity)
-		protected.PUT("/activities/:id", activityHandler.UpdateActivity)
-		protected.DELETE("/activities/:id", activityHandler.DeleteActivity)
-		protected.GET("/activities/:id", activityHandler.GetActivity)
-		protected.GET("/activities", activityHandler.ListActivitiesForCompany)
+		protected.GET("/me", consultantHandler.GetMe)
+		protected.PUT("/me", consultantHandler.UpdateMe)
 
 		protected.POST("/entries", entryHandler.CreateEntry)
 		protected.PUT("/entries/:id", entryHandler.UpdateEntry)

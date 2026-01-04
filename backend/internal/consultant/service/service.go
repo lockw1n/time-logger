@@ -12,4 +12,7 @@ type Service interface {
 	DeleteConsultant(ctx context.Context, id uint64) error
 
 	GetConsultant(ctx context.Context, id uint64) (domain.Consultant, error)
+
+	GetMe(ctx context.Context, consultantID uint64) (domain.Consultant, error)
+	UpdateMe(ctx context.Context, consultantID uint64, in UpdateConsultantInput) (domain.Consultant, error)
 }

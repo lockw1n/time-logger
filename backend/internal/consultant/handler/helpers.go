@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	authctx "github.com/lockw1n/time-logger/internal/auth/context"
 )
 
 func parseUintParam(c *gin.Context, name string) (uint64, error) {
@@ -62,4 +64,16 @@ func trimPtr(s *string) *string {
 		return nil
 	}
 	return &trimmed
+}
+
+func requireConsultantID(c *gin.Context) (uint64, bool) {
+	auth, ok := authctx.FromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "auth context missing",
+		})
+		return 0, false
+	}
+
+	return auth.ConsultantID, true
 }

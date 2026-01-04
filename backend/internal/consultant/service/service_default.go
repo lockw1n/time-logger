@@ -152,3 +152,15 @@ func (s *service) GetConsultant(ctx context.Context, id uint64) (domain.Consulta
 
 	return consultant, nil
 }
+
+func (s *service) GetMe(ctx context.Context, consultantID uint64) (domain.Consultant, error) {
+	return s.GetConsultant(ctx, consultantID)
+}
+
+func (s *service) UpdateMe(
+	ctx context.Context,
+	consultantID uint64,
+	input UpdateConsultantInput,
+) (domain.Consultant, error) {
+	return s.UpdateConsultant(ctx, consultantID, input)
+}
