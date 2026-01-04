@@ -1,20 +1,26 @@
 package domain
 
 type Consultant struct {
-	ID           uint64
-	FirstName    string
-	MiddleName   *string
-	LastName     string
+	ID         uint64
+	FirstName  string
+	MiddleName *string
+	LastName   string
+
+	Email        string
+	PasswordHash string
+
 	AddressLine1 string
 	AddressLine2 *string
 	Zip          string
 	City         string
 	Region       *string
 	Country      string
-	TaxNumber    string
-	BankName     string
-	BankAddress  string
-	BankCountry  string
-	BankIBAN     string
-	BankBIC      string
+
+	TaxNumber string
+
+	BankName    string
+	BankAddress string
+	BankCountry string
+	BankIBAN    string
+	BankBIC     string
 }
