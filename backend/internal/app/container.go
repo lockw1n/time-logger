@@ -3,11 +3,13 @@ package app
 import (
 	"os"
 
+	authjwt "github.com/lockw1n/time-logger/internal/auth/jwt"
 	"github.com/lockw1n/time-logger/internal/pdf"
 	"gorm.io/gorm"
 
 	activityrepo "github.com/lockw1n/time-logger/internal/activity/repository"
 	activityservice "github.com/lockw1n/time-logger/internal/activity/service"
+	authservice "github.com/lockw1n/time-logger/internal/auth/service"
 	companyrepo "github.com/lockw1n/time-logger/internal/company/repository"
 	companyservice "github.com/lockw1n/time-logger/internal/company/service"
 	consultantrepo "github.com/lockw1n/time-logger/internal/consultant/repository"
@@ -25,6 +27,7 @@ import (
 type Container struct {
 	DB *gorm.DB
 
+	AuthService       authservice.Service
 	CompanyService    companyservice.Service
 	ConsultantService consultantservice.Service
 	ContractService   contractservice.Service
@@ -44,8 +47,15 @@ func NewContainer(db *gorm.DB) *Container {
 	activityRepo := activityrepo.NewGormRepository(db)
 	entryRepo := entryrepo.NewGormRepository(db)
 
+	authConfig, err := authjwt.LoadConfigFromEnv()
+	if err != nil {
+		panic("failed to load JWT config: " + err.Error())
+	}
+	issuer := authjwt.NewIssuer(authConfig)
+
 	return &Container{
 		DB:                db,
+		AuthService:       authservice.NewService(consultantRepo, issuer),
 		CompanyService:    companyservice.NewService(companyRepo),
 		ConsultantService: consultantservice.NewService(consultantRepo),
 		ContractService:   contractservice.NewService(contractRepo),

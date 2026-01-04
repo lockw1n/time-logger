@@ -7,15 +7,23 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	authjwt "github.com/lockw1n/time-logger/internal/auth/jwt"
 	consultantrepo "github.com/lockw1n/time-logger/internal/consultant/repository"
 )
 
 type service struct {
-	consultants consultantrepo.Repository
+	consultantRepo consultantrepo.Repository
+	issuer         authjwt.Issuer
 }
 
-func NewService(consultants consultantrepo.Repository) Service {
-	return &service{consultants: consultants}
+func NewService(
+	consultantRepo consultantrepo.Repository,
+	issuer authjwt.Issuer,
+) Service {
+	return &service{
+		consultantRepo: consultantRepo,
+		issuer:         issuer,
+	}
 }
 
 func (s *service) Login(ctx context.Context, in LoginInput) (LoginResult, error) {
@@ -26,7 +34,7 @@ func (s *service) Login(ctx context.Context, in LoginInput) (LoginResult, error)
 		return LoginResult{}, ErrInvalidCredentials
 	}
 
-	consultant, err := s.consultants.FindByEmail(ctx, email)
+	consultant, err := s.consultantRepo.FindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, consultantrepo.ErrNotFound) {
 			return LoginResult{}, ErrInvalidCredentials
@@ -38,7 +46,14 @@ func (s *service) Login(ctx context.Context, in LoginInput) (LoginResult, error)
 		return LoginResult{}, ErrInvalidCredentials
 	}
 
+	token, expiresAt, err := s.issuer.IssueAccessToken(consultant.ID)
+	if err != nil {
+		return LoginResult{}, err
+	}
+
 	return LoginResult{
 		ConsultantID: consultant.ID,
+		AccessToken:  token,
+		ExpiresAt:    expiresAt,
 	}, nil
 }

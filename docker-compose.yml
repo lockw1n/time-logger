@@ -61,6 +61,10 @@ services:
             DATABASE_URL: postgres://timelogger:password@db:5432/timelogger?sslmode=disable
             PDF_RENDERER_URL: http://pdf-renderer:3001
             PDF_RENDERER_TOKEN: super-secret-token
+            JWT_SECRET: jwt-super-secret-token
+            JWT_ISSUER: time-logger
+            JWT_AUDIENCE: time-logger-clients
+            JWT_TTL: 30m
         expose:
             - "8080"
         depends_on:
