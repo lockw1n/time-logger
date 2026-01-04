@@ -7,9 +7,9 @@ import (
 )
 
 type Service interface {
-	CreateEntry(ctx context.Context, input CreateEntryInput) (domain.Entry, error)
-	UpdateEntry(ctx context.Context, id uint64, input UpdateEntryInput) (domain.Entry, error)
-	DeleteEntry(ctx context.Context, id uint64) error
+	CreateEntry(ctx context.Context, consultantID uint64, input CreateEntryInput) (domain.Entry, error)
+	UpdateEntry(ctx context.Context, consultantID uint64, entryID uint64, input UpdateEntryInput) (domain.Entry, error)
+	DeleteEntry(ctx context.Context, consultantID uint64, entryID uint64) error
 
-	GetEntry(ctx context.Context, id uint64) (domain.Entry, error)
+	GetEntry(ctx context.Context, consultantID uint64, entryID uint64) (domain.Entry, error)
 }

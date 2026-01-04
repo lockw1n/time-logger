@@ -16,8 +16,12 @@ func NewHandler(service service.Service) *Handler {
 }
 
 func (h *Handler) CreateEntry(c *gin.Context) {
-	var req CreateEntryRequest
+	consultantID, ok := requireConsultantID(c)
+	if !ok {
+		return
+	}
 
+	var req CreateEntryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
@@ -33,7 +37,6 @@ func (h *Handler) CreateEntry(c *gin.Context) {
 	}
 
 	input := service.CreateEntryInput{
-		ConsultantID:    req.ConsultantID,
 		CompanyID:       req.CompanyID,
 		TicketCode:      req.TicketCode,
 		ActivityID:      req.ActivityID,
@@ -42,7 +45,7 @@ func (h *Handler) CreateEntry(c *gin.Context) {
 		Comment:         req.Comment,
 	}
 
-	entry, err := h.service.CreateEntry(c.Request.Context(), input)
+	entry, err := h.service.CreateEntry(c.Request.Context(), consultantID, input)
 	if err != nil {
 		status, msg := mapError(err)
 		c.JSON(status, gin.H{"error": msg})
@@ -53,6 +56,11 @@ func (h *Handler) CreateEntry(c *gin.Context) {
 }
 
 func (h *Handler) UpdateEntry(c *gin.Context) {
+	consultantID, ok := requireConsultantID(c)
+	if !ok {
+		return
+	}
+
 	id, err := parseUintParam(c, "id")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -72,7 +80,7 @@ func (h *Handler) UpdateEntry(c *gin.Context) {
 		Comment:         req.Comment,
 	}
 
-	entry, err := h.service.UpdateEntry(c.Request.Context(), id, input)
+	entry, err := h.service.UpdateEntry(c.Request.Context(), consultantID, id, input)
 	if err != nil {
 		status, msg := mapError(err)
 		c.JSON(status, gin.H{"error": msg})
@@ -83,13 +91,18 @@ func (h *Handler) UpdateEntry(c *gin.Context) {
 }
 
 func (h *Handler) DeleteEntry(c *gin.Context) {
+	consultantID, ok := requireConsultantID(c)
+	if !ok {
+		return
+	}
+
 	id, err := parseUintParam(c, "id")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	if err := h.service.DeleteEntry(c.Request.Context(), id); err != nil {
+	if err := h.service.DeleteEntry(c.Request.Context(), consultantID, id); err != nil {
 		status, msg := mapError(err)
 		c.JSON(status, gin.H{"error": msg})
 		return
@@ -99,13 +112,18 @@ func (h *Handler) DeleteEntry(c *gin.Context) {
 }
 
 func (h *Handler) GetEntry(c *gin.Context) {
+	consultantID, ok := requireConsultantID(c)
+	if !ok {
+		return
+	}
+
 	id, err := parseUintParam(c, "id")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	entry, err := h.service.GetEntry(c.Request.Context(), id)
+	entry, err := h.service.GetEntry(c.Request.Context(), consultantID, id)
 	if err != nil {
 		status, msg := mapError(err)
 		c.JSON(status, gin.H{"error": msg})

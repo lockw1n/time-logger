@@ -7,4 +7,5 @@ var (
 	ErrEntryAlreadyExists = errors.New("entry already exists")
 	ErrEntryConflict      = errors.New("entry conflict")
 	ErrEntryInvalid       = errors.New("invalid entry data")
+	ErrForbidden          = errors.New("forbidden")
 )

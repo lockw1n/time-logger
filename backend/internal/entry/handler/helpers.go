@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	authctx "github.com/lockw1n/time-logger/internal/auth/context"
 	"github.com/lockw1n/time-logger/internal/constants"
-	"github.com/lockw1n/time-logger/internal/entry/domain"
 )
 
 func parseUintParam(c *gin.Context, name string) (uint64, error) {
@@ -48,10 +48,14 @@ func parseDate(date string) (time.Time, error) {
 	return t, nil
 }
 
-func respondContracts(c *gin.Context, entries []domain.Entry) {
-	resp := make([]EntryResponse, 0, len(entries))
-	for _, entry := range entries {
-		resp = append(resp, toResponse(entry))
+func requireConsultantID(c *gin.Context) (uint64, bool) {
+	auth, ok := authctx.FromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "auth context missing",
+		})
+		return 0, false
 	}
-	c.JSON(http.StatusOK, resp)
+
+	return auth.ConsultantID, true
 }

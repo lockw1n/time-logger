@@ -31,13 +31,13 @@ func NewService(
 	}
 }
 
-func (s *service) CreateEntry(ctx context.Context, input CreateEntryInput) (domain.Entry, error) {
+func (s *service) CreateEntry(ctx context.Context, consultantID uint64, input CreateEntryInput) (domain.Entry, error) {
 	if err := input.Validate(); err != nil {
 		return domain.Entry{}, ErrEntryInvalid
 	}
 
 	date := normalizeDate(input.Date)
-	contract, err := s.contractRepo.FindActiveByConsultantCompany(ctx, input.ConsultantID, input.CompanyID, date)
+	contract, err := s.contractRepo.FindActiveByConsultantCompany(ctx, consultantID, input.CompanyID, date)
 	if err != nil {
 		if errors.Is(err, contractrepo.ErrNotFound) {
 			return domain.Entry{}, ErrEntryConflict
@@ -51,7 +51,7 @@ func (s *service) CreateEntry(ctx context.Context, input CreateEntryInput) (doma
 	}
 
 	entry := domain.Entry{
-		ConsultantID:    input.ConsultantID,
+		ConsultantID:    consultantID,
 		CompanyID:       input.CompanyID,
 		ContractID:      contract.ID,
 		TicketID:        ticket.ID,
@@ -75,21 +75,26 @@ func (s *service) CreateEntry(ctx context.Context, input CreateEntryInput) (doma
 	return created, nil
 }
 
-func (s *service) UpdateEntry(ctx context.Context, id uint64, input UpdateEntryInput) (domain.Entry, error) {
-	if input == (UpdateEntryInput{}) {
-		return domain.Entry{}, ErrEntryInvalid
-	}
-
+func (s *service) UpdateEntry(
+	ctx context.Context,
+	consultantID uint64,
+	entryID uint64,
+	input UpdateEntryInput,
+) (domain.Entry, error) {
 	if err := input.Validate(); err != nil {
 		return domain.Entry{}, ErrEntryInvalid
 	}
 
-	existing, err := s.repo.FindByID(ctx, id)
+	existing, err := s.repo.FindByID(ctx, entryID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return domain.Entry{}, ErrEntryNotFound
 		}
 		return domain.Entry{}, err
+	}
+
+	if existing.ConsultantID != consultantID {
+		return domain.Entry{}, ErrForbidden
 	}
 
 	if input.DurationMinutes != nil {
@@ -110,8 +115,20 @@ func (s *service) UpdateEntry(ctx context.Context, id uint64, input UpdateEntryI
 	return updated, nil
 }
 
-func (s *service) DeleteEntry(ctx context.Context, id uint64) error {
-	if err := s.repo.Delete(ctx, id); err != nil {
+func (s *service) DeleteEntry(ctx context.Context, consultantID uint64, entryID uint64) error {
+	entry, err := s.repo.FindByID(ctx, entryID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrEntryNotFound
+		}
+		return err
+	}
+
+	if entry.ConsultantID != consultantID {
+		return ErrForbidden
+	}
+
+	if err := s.repo.Delete(ctx, entryID); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrEntryNotFound
 		}
@@ -121,13 +138,17 @@ func (s *service) DeleteEntry(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (s *service) GetEntry(ctx context.Context, id uint64) (domain.Entry, error) {
-	entry, err := s.repo.FindByID(ctx, id)
+func (s *service) GetEntry(ctx context.Context, consultantID uint64, entryID uint64) (domain.Entry, error) {
+	entry, err := s.repo.FindByID(ctx, entryID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return domain.Entry{}, ErrEntryNotFound
 		}
 		return domain.Entry{}, err
+	}
+
+	if entry.ConsultantID != consultantID {
+		return domain.Entry{}, ErrForbidden
 	}
 
 	return entry, nil
