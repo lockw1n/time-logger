@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	authctx "github.com/lockw1n/time-logger/internal/auth/context"
 	"github.com/lockw1n/time-logger/internal/invoice/domain"
 	"github.com/lockw1n/time-logger/internal/invoice/render"
 	excelrenderer "github.com/lockw1n/time-logger/internal/invoice/render/excel"
@@ -29,8 +30,13 @@ func NewHandler(
 }
 
 func (h *Handler) GenerateInvoice(c *gin.Context) {
-	var req GenerateInvoiceRequest
+	auth, ok := authctx.FromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "auth context missing"})
+		return
+	}
 
+	var req GenerateInvoiceRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query parameters"})
 		return
@@ -53,7 +59,7 @@ func (h *Handler) GenerateInvoice(c *gin.Context) {
 	format := strings.ToLower(c.DefaultQuery("format", "pdf"))
 
 	input := service.GenerateInvoiceInput{
-		ConsultantID: req.ConsultantID,
+		ConsultantID: auth.ConsultantID,
 		CompanyID:    req.CompanyID,
 		Start:        start,
 		End:          end,

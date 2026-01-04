@@ -6,6 +6,7 @@ import (
 	"github.com/lockw1n/time-logger/internal/health"
 
 	activityhandler "github.com/lockw1n/time-logger/internal/activity/handler"
+	authhandler "github.com/lockw1n/time-logger/internal/auth/handler"
 	companyhandler "github.com/lockw1n/time-logger/internal/company/handler"
 	consultanthandler "github.com/lockw1n/time-logger/internal/consultant/handler"
 	contracthandler "github.com/lockw1n/time-logger/internal/contract/handler"
@@ -19,11 +20,8 @@ func SetupRouter(container *app.Container) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// Health endpoints
 	healthHandler := health.NewHandler(container.DB)
-	r.GET("/health", healthHandler.Check)
-	r.HEAD("/health", healthHandler.Check)
-
+	authHandler := authhandler.NewHandler(container.AuthService)
 	companyHandler := companyhandler.NewHandler(container.CompanyService)
 	consultantHandler := consultanthandler.NewHandler(container.ConsultantService)
 	contractHandler := contracthandler.NewHandler(container.ContractService)
@@ -33,45 +31,55 @@ func SetupRouter(container *app.Container) *gin.Engine {
 	timesheetHandler := timesheethandler.NewHandler(container.TimesheetService)
 	invoiceHandler := invoicehandler.NewHandler(container.InvoiceService, container.PdfRenderer)
 
+	r.GET("/health", healthHandler.Check)
+	r.HEAD("/health", healthHandler.Check)
+
 	api := r.Group("/api")
+
 	{
-		api.POST("/companies", companyHandler.CreateCompany)
-		api.PUT("/companies/:id", companyHandler.UpdateCompany)
-		api.DELETE("/companies/:id", companyHandler.DeleteCompany)
-		api.GET("/companies/:id", companyHandler.GetCompany)
-		api.GET("/companies", companyHandler.ListCompanies)
+		api.POST("/auth/login", authHandler.Login)
+	}
 
-		api.POST("/consultants", consultantHandler.CreateConsultant)
-		api.PUT("/consultants/:id", consultantHandler.UpdateConsultant)
-		api.DELETE("/consultants/:id", consultantHandler.DeleteConsultant)
-		api.GET("/consultants/:id", consultantHandler.GetConsultant)
+	protected := api.Group("")
+	protected.Use(container.AuthMiddleware.RequireAuth())
+	{
+		protected.POST("/companies", companyHandler.CreateCompany)
+		protected.PUT("/companies/:id", companyHandler.UpdateCompany)
+		protected.DELETE("/companies/:id", companyHandler.DeleteCompany)
+		protected.GET("/companies/:id", companyHandler.GetCompany)
+		protected.GET("/companies", companyHandler.ListCompanies)
 
-		api.POST("/contracts", contractHandler.CreateContract)
-		api.PUT("/contracts/:id", contractHandler.UpdateContract)
-		api.DELETE("/contracts/:id", contractHandler.DeleteContract)
-		api.GET("/contracts/:id", contractHandler.GetContract)
-		api.GET("/contracts", contractHandler.ListContractsForConsultant)
+		protected.POST("/consultants", consultantHandler.CreateConsultant)
+		protected.PUT("/consultants/:id", consultantHandler.UpdateConsultant)
+		protected.DELETE("/consultants/:id", consultantHandler.DeleteConsultant)
+		protected.GET("/consultants/:id", consultantHandler.GetConsultant)
 
-		api.POST("/tickets", ticketHandler.CreateTicket)
-		api.PUT("/tickets/:id", ticketHandler.UpdateTicket)
-		api.DELETE("/tickets/:id", ticketHandler.DeleteTicket)
-		api.GET("/tickets/:id", ticketHandler.GetTicket)
-		api.GET("/tickets", ticketHandler.ListTicketsForCompany)
+		protected.POST("/contracts", contractHandler.CreateContract)
+		protected.PUT("/contracts/:id", contractHandler.UpdateContract)
+		protected.DELETE("/contracts/:id", contractHandler.DeleteContract)
+		protected.GET("/contracts/:id", contractHandler.GetContract)
+		protected.GET("/contracts", contractHandler.ListContractsForConsultant)
 
-		api.POST("/activities", activityHandler.CreateActivity)
-		api.PUT("/activities/:id", activityHandler.UpdateActivity)
-		api.DELETE("/activities/:id", activityHandler.DeleteActivity)
-		api.GET("/activities/:id", activityHandler.GetActivity)
-		api.GET("/activities", activityHandler.ListActivitiesForCompany)
+		protected.POST("/tickets", ticketHandler.CreateTicket)
+		protected.PUT("/tickets/:id", ticketHandler.UpdateTicket)
+		protected.DELETE("/tickets/:id", ticketHandler.DeleteTicket)
+		protected.GET("/tickets/:id", ticketHandler.GetTicket)
+		protected.GET("/tickets", ticketHandler.ListTicketsForCompany)
 
-		api.POST("/entries", entryHandler.CreateEntry)
-		api.PUT("/entries/:id", entryHandler.UpdateEntry)
-		api.DELETE("/entries/:id", entryHandler.DeleteEntry)
-		api.GET("/entries/:id", entryHandler.GetEntry)
+		protected.POST("/activities", activityHandler.CreateActivity)
+		protected.PUT("/activities/:id", activityHandler.UpdateActivity)
+		protected.DELETE("/activities/:id", activityHandler.DeleteActivity)
+		protected.GET("/activities/:id", activityHandler.GetActivity)
+		protected.GET("/activities", activityHandler.ListActivitiesForCompany)
 
-		api.GET("/timesheet", timesheetHandler.GetTimesheet)
+		protected.POST("/entries", entryHandler.CreateEntry)
+		protected.PUT("/entries/:id", entryHandler.UpdateEntry)
+		protected.DELETE("/entries/:id", entryHandler.DeleteEntry)
+		protected.GET("/entries/:id", entryHandler.GetEntry)
 
-		api.POST("/invoices/generate", invoiceHandler.GenerateInvoice)
+		protected.GET("/timesheet", timesheetHandler.GetTimesheet)
+
+		protected.POST("/invoices/generate", invoiceHandler.GenerateInvoice)
 	}
 
 	return r

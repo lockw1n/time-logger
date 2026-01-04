@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	authctx "github.com/lockw1n/time-logger/internal/auth/context"
 	"github.com/lockw1n/time-logger/internal/timesheet/service"
 )
 
@@ -16,9 +17,9 @@ func NewHandler(service service.Service) *Handler {
 }
 
 func (h *Handler) GetTimesheet(c *gin.Context) {
-	consultantID, err := parseRequiredUintQuery(c, "consultant_id")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	auth, ok := authctx.FromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "auth context missing"})
 		return
 	}
 
@@ -43,7 +44,7 @@ func (h *Handler) GetTimesheet(c *gin.Context) {
 	}
 
 	input := service.GenerateTimesheetInput{
-		ConsultantID: consultantID,
+		ConsultantID: auth.ConsultantID,
 		CompanyID:    companyID,
 		Start:        start,
 		End:          end,

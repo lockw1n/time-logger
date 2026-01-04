@@ -9,6 +9,7 @@ import (
 
 	activityrepo "github.com/lockw1n/time-logger/internal/activity/repository"
 	activityservice "github.com/lockw1n/time-logger/internal/activity/service"
+	authhandler "github.com/lockw1n/time-logger/internal/auth/handler"
 	authservice "github.com/lockw1n/time-logger/internal/auth/service"
 	companyrepo "github.com/lockw1n/time-logger/internal/company/repository"
 	companyservice "github.com/lockw1n/time-logger/internal/company/service"
@@ -27,6 +28,7 @@ import (
 type Container struct {
 	DB *gorm.DB
 
+	AuthMiddleware    *authhandler.Middleware
 	AuthService       authservice.Service
 	CompanyService    companyservice.Service
 	ConsultantService consultantservice.Service
@@ -52,9 +54,11 @@ func NewContainer(db *gorm.DB) *Container {
 		panic("failed to load JWT config: " + err.Error())
 	}
 	issuer := authjwt.NewIssuer(authConfig)
+	verifier := authjwt.NewVerifier(authConfig)
 
 	return &Container{
 		DB:                db,
+		AuthMiddleware:    authhandler.NewMiddleware(verifier),
 		AuthService:       authservice.NewService(consultantRepo, issuer),
 		CompanyService:    companyservice.NewService(companyRepo),
 		ConsultantService: consultantservice.NewService(consultantRepo),
