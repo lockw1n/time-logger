@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import { useAuth } from "./auth/AuthContext";
 import ProtectedApp from "./components/ProtectedApp";
+import TimesheetPage from "./components/TimesheetPage";
+import MePage from "./pages/Me";
 
 export default function App() {
     const { isAuthenticated, isInitializing } = useAuth();
@@ -34,5 +36,10 @@ export default function App() {
         );
     }
 
-    return <ProtectedApp path={path} />;
+    const isProfileRoute = path.startsWith("/me");
+    return (
+        <ProtectedApp path={path}>
+            {isProfileRoute ? <MePage /> : <TimesheetPage />}
+        </ProtectedApp>
+    );
 }

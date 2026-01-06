@@ -7,6 +7,7 @@ type ConsultantResponse struct {
 	FirstName    string  `json:"first_name"`
 	MiddleName   *string `json:"middle_name"`
 	LastName     string  `json:"last_name"`
+	Email        string  `json:"email"`
 	AddressLine1 string  `json:"address_line1"`
 	AddressLine2 *string `json:"address_line2"`
 	Zip          string  `json:"zip"`
@@ -27,6 +28,7 @@ func toResponse(consultant domain.Consultant) ConsultantResponse {
 		FirstName:    consultant.FirstName,
 		MiddleName:   consultant.MiddleName,
 		LastName:     consultant.LastName,
+		Email:        consultant.Email,
 		AddressLine1: consultant.AddressLine1,
 		AddressLine2: consultant.AddressLine2,
 		Zip:          consultant.Zip,

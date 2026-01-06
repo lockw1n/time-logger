@@ -41,6 +41,7 @@ func (h *Handler) UpdateMe(c *gin.Context) {
 		FirstName:    req.FirstName,
 		MiddleName:   req.MiddleName,
 		LastName:     req.LastName,
+		Email:        req.Email,
 		AddressLine1: req.AddressLine1,
 		AddressLine2: req.AddressLine2,
 		Zip:          req.Zip,
