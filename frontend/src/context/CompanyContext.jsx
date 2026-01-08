@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiGet } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 
 const CompanyContext = createContext(null);
 const SELECTED_COMPANY_KEY = "company.selected_id";
@@ -15,6 +16,7 @@ const getStoredSelectedCompanyId = () => {
 };
 
 export function CompanyProvider({ children }) {
+    const { isAuthenticated, isInitializing } = useAuth();
     const [companies, setCompanies] = useState([]);
     const [selectedCompanyId, setSelectedCompanyId] = useState(() => getStoredSelectedCompanyId());
 
@@ -33,6 +35,13 @@ export function CompanyProvider({ children }) {
     }, []);
 
     useEffect(() => {
+        if (isInitializing) {
+            return;
+        }
+        if (!isAuthenticated) {
+            setCompanies([]);
+            return;
+        }
         apiGet(COMPANIES_URL)
             .then((data) => {
                 const nextCompanies = Array.isArray(data) ? data : data?.companies || [];
@@ -46,7 +55,7 @@ export function CompanyProvider({ children }) {
             .catch(() => {
                 setCompanies([]);
             });
-    }, []);
+    }, [isAuthenticated, isInitializing]);
 
     useEffect(() => {
         if (selectedCompanyId) {

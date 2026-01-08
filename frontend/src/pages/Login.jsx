@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import ledvixWordmark from "../assets/brand/ledvix-wordmark.svg";
 
 const getRedirectTarget = (search) => {
     const params = new URLSearchParams(search);
@@ -35,9 +36,11 @@ export default function Login() {
 
     return (
         <div className="min-h-screen p-6 flex flex-col items-center">
-            <h1 className="text-3xl font-bold mb-6 text-gray-100 flex items-center gap-2">
-                ⏱️ Time Logger <span className="text-gray-400">– Login</span>
-            </h1>
+            <img
+                src={ledvixWordmark}
+                alt="Ledvix"
+                className="h-10 w-auto mb-8"
+            />
 
             <div className="w-full max-w-6xl flex-1 flex items-center justify-center">
                 <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6 max-w-lg w-full">

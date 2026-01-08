@@ -2,6 +2,7 @@ import React from "react";
 import { useAuthGuard } from "../auth/useAuthGuard";
 import { useAuth } from "../auth/AuthContext";
 import { useCompany } from "../context/CompanyContext";
+import ledvixWordmark from "../assets/brand/ledvix-wordmark.svg";
 
 export default function ProtectedApp({ path, children }) {
     const canRenderProtected = useAuthGuard(path);
@@ -14,20 +15,24 @@ export default function ProtectedApp({ path, children }) {
     return (
         <div className="min-h-screen">
             {isAuthenticated ? (
-                <div className="flex items-center px-6 pt-6">
+                <div className="flex items-center px-6 py-4">
                     <div className="flex items-center gap-3">
                         <button
-                            className="text-gray-300 hover:text-white transition"
+                            className="flex items-center cursor-pointer transition hover:opacity-90"
                             onClick={() => {
                                 window.history.pushState(null, "", "/");
                                 window.dispatchEvent(new PopStateEvent("popstate"));
                             }}
                         >
-                            Timesheet
+                            <img
+                                src={ledvixWordmark}
+                                alt="Ledvix"
+                                className="h-8 w-auto"
+                            />
                         </button>
                         {selectedCompanyId !== null ? (
                             <select
-                                className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200"
+                                className="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-[11px] text-gray-400"
                                 value={selectedCompanyId || ""}
                                 onChange={(event) =>
                                     setSelectedCompanyId(
@@ -48,7 +53,7 @@ export default function ProtectedApp({ path, children }) {
                     <div className="flex items-center gap-4">
                         {fullName ? (
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                className="text-gray-400 hover:text-gray-200 transition"
                                 onClick={() => {
                                     window.history.pushState(null, "", "/me");
                                     window.dispatchEvent(new PopStateEvent("popstate"));

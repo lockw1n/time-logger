@@ -33,9 +33,7 @@ function TimesheetContent({ selectedCompanyId }) {
 
     return (
         <div className="min-h-screen p-6 flex flex-col items-center relative">
-            <h1 className="text-3xl font-bold mb-6 text-gray-100 flex items-center gap-2">
-                ⏱️ Time Logger <span className="text-gray-400">– Timesheet</span>
-            </h1>
+            <h1 className="text-2xl font-semibold mb-6 text-gray-100">Ledvix</h1>
 
             <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4 text-gray-200">
                 <WeekNavigator
