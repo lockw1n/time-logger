@@ -7,7 +7,12 @@ export function useActivities(companyId) {
     const [error, setError] = useState("");
 
     const refresh = useCallback(async () => {
-        if (!companyId) return;
+        if (companyId === null) {
+            setActivities([]);
+            setLoading(false);
+            setError("");
+            return;
+        }
         setLoading(true);
         setError("");
         try {
@@ -28,6 +33,12 @@ export function useActivities(companyId) {
         } finally {
             setLoading(false);
         }
+    }, [companyId]);
+
+    useEffect(() => {
+        setActivities([]);
+        setLoading(false);
+        setError("");
     }, [companyId]);
 
     useEffect(() => {

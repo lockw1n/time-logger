@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	authctx "github.com/lockw1n/time-logger/internal/auth/context"
 	"github.com/lockw1n/time-logger/internal/company/domain"
 )
 
@@ -60,4 +61,16 @@ func respondCompanies(c *gin.Context, companies []domain.Company) {
 		resp = append(resp, toResponse(company))
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+func requireConsultantID(c *gin.Context) (uint64, bool) {
+	auth, ok := authctx.FromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "auth context missing",
+		})
+		return 0, false
+	}
+
+	return auth.ConsultantID, true
 }

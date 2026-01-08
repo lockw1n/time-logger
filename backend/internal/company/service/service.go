@@ -12,6 +12,6 @@ type Service interface {
 	DeleteCompany(ctx context.Context, id uint64) error
 
 	GetCompany(ctx context.Context, id uint64) (domain.Company, error)
-	ListCompanies(ctx context.Context) ([]domain.Company, error)
+	ListAllCompanies(ctx context.Context) ([]domain.Company, error)
 	ListCompaniesForConsultant(ctx context.Context, consultantID uint64) ([]domain.Company, error)
 }

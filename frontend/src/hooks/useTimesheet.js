@@ -73,7 +73,7 @@ const buildRowsFromTimesheet = (rows, totalsPayload = {}) => {
     return { tableRows, ticketOptions, totalsPerDayMinutes, overallMinutes };
 };
 
-export function useTimesheet() {
+export function useTimesheet(selectedCompanyId) {
     const initialAnchor = (() => {
         const currentWeek = getStartOfWeek(new Date());
         currentWeek.setDate(currentWeek.getDate() - 7); // show previous week on the left, current on the right
@@ -92,8 +92,19 @@ export function useTimesheet() {
 
     const refresh = useCallback(
         async (anchor = anchorDate) => {
+            if (selectedCompanyId === null) {
+                setRows([]);
+                setTicketOptions([]);
+                setTotalsPerDayMinutes({});
+                setOverallMinutes(0);
+                return;
+            }
             const { startStr, endStr } = buildRangeParams(anchor);
-            const data = await getTimesheet({ start: startStr, end: endStr });
+            const data = await getTimesheet({
+                start: startStr,
+                end: endStr,
+                companyId: selectedCompanyId,
+            });
             const { tableRows, ticketOptions, totalsPerDayMinutes, overallMinutes } =
                 buildRowsFromTimesheet(data?.rows || [], data?.totals || {});
             setRows(tableRows);
@@ -101,12 +112,19 @@ export function useTimesheet() {
             setTotalsPerDayMinutes(totalsPerDayMinutes);
             setOverallMinutes(overallMinutes);
         },
-        [anchorDate]
+        [anchorDate, selectedCompanyId]
     );
 
     useEffect(() => {
         refresh(anchorDate);
-    }, [anchorDate, refresh]);
+    }, [anchorDate, refresh, selectedCompanyId]);
+
+    useEffect(() => {
+        setRows([]);
+        setTicketOptions([]);
+        setTotalsPerDayMinutes({});
+        setOverallMinutes(0);
+    }, [selectedCompanyId]);
 
     const goToPreviousWeek = useCallback(() => {
         setAnchorDate((prev) => {

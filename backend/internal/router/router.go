@@ -40,12 +40,6 @@ func SetupRouter(container *app.Container) *gin.Engine {
 		api.POST("/auth/login", authHandler.Login)
 
 		// just for now, will be moved to admin area later
-		api.POST("/companies", companyHandler.CreateCompany)
-		api.PUT("/companies/:id", companyHandler.UpdateCompany)
-		api.DELETE("/companies/:id", companyHandler.DeleteCompany)
-		api.GET("/companies/:id", companyHandler.GetCompany)
-		api.GET("/companies", companyHandler.ListCompanies)
-
 		api.POST("/activities", activityHandler.CreateActivity)
 		api.PUT("/activities/:id", activityHandler.UpdateActivity)
 		api.DELETE("/activities/:id", activityHandler.DeleteActivity)
@@ -75,6 +69,13 @@ func SetupRouter(container *app.Container) *gin.Engine {
 	{
 		protected.GET("/me", consultantHandler.GetMe)
 		protected.PUT("/me", consultantHandler.UpdateMe)
+
+		protected.POST("/companies", companyHandler.CreateCompany)
+		protected.PUT("/companies/:id", companyHandler.UpdateCompany)
+		protected.DELETE("/companies/:id", companyHandler.DeleteCompany)
+		protected.GET("/companies/:id", companyHandler.GetCompany)
+		protected.GET("/companies", companyHandler.ListConsultantCompanies)
+		protected.GET("/companies/all", companyHandler.ListAllCompanies)
 
 		protected.POST("/entries", entryHandler.CreateEntry)
 		protected.PUT("/entries/:id", entryHandler.UpdateEntry)

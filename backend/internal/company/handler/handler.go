@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lockw1n/time-logger/internal/company/service"
@@ -118,28 +117,27 @@ func (h *Handler) GetCompany(c *gin.Context) {
 	c.JSON(http.StatusOK, toResponse(company))
 }
 
-func (h *Handler) ListCompanies(c *gin.Context) {
+func (h *Handler) ListConsultantCompanies(c *gin.Context) {
+	consultantID, ok := requireConsultantID(c)
+	if !ok {
+		return
+	}
 	ctx := c.Request.Context()
 
-	if consultantIDStr := c.Query("consultant_id"); consultantIDStr != "" {
-		consultantID, err := strconv.ParseUint(consultantIDStr, 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid consultant_id"})
-			return
-		}
-
-		companies, err := h.service.ListCompaniesForConsultant(ctx, consultantID)
-		if err != nil {
-			status, msg := mapError(err)
-			c.JSON(status, gin.H{"error": msg})
-			return
-		}
-
-		respondCompanies(c, companies)
+	companies, err := h.service.ListCompaniesForConsultant(ctx, consultantID)
+	if err != nil {
+		status, msg := mapError(err)
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 
-	companies, err := h.service.ListCompanies(ctx)
+	respondCompanies(c, companies)
+	return
+}
+
+func (h *Handler) ListAllCompanies(c *gin.Context) {
+	ctx := c.Request.Context()
+	companies, err := h.service.ListAllCompanies(ctx)
 	if err != nil {
 		status, msg := mapError(err)
 		c.JSON(status, gin.H{"error": msg})

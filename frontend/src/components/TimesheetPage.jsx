@@ -3,11 +3,13 @@ import TimesheetTable from "./TimesheetTable";
 import TimeLogModal from "./TimeLogModal";
 import InvoiceGenerator from "./InvoiceGenerator";
 import WeekNavigator from "./WeekNavigator";
+import CompanySelectionGate from "./CompanySelectionGate";
 import { useTimesheet } from "../hooks/useTimesheet";
 import { useActivities } from "../hooks/useActivities";
 import { useTimeLogForm } from "../hooks/useTimeLogForm";
+import { useCompany } from "../context/CompanyContext";
 
-export default function TimesheetPage() {
+function TimesheetContent({ selectedCompanyId }) {
     const {
         days,
         rows,
@@ -17,8 +19,12 @@ export default function TimesheetPage() {
         goToNextWeek,
         goToPreviousWeek,
         refresh,
-    } = useTimesheet();
-    const { activities, loading: activitiesLoading, error: activitiesError } = useActivities(1);
+    } = useTimesheet(selectedCompanyId);
+    const {
+        activities,
+        loading: activitiesLoading,
+        error: activitiesError,
+    } = useActivities(selectedCompanyId);
     const { openNew, openFromCell, modalProps } = useTimeLogForm({
         activities,
         onSaved: refresh,
@@ -64,4 +70,18 @@ export default function TimesheetPage() {
             <InvoiceGenerator />
         </div>
     );
+}
+
+export default function TimesheetPage() {
+    const { selectedCompanyId } = useCompany();
+
+    if (selectedCompanyId === null) {
+        return (
+            <div className="min-h-screen p-6 flex items-center justify-center bg-black/60">
+                <CompanySelectionGate />
+            </div>
+        );
+    }
+
+    return <TimesheetContent selectedCompanyId={selectedCompanyId} />;
 }

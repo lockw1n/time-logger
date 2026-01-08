@@ -125,7 +125,7 @@ func (s *service) GetCompany(ctx context.Context, id uint64) (domain.Company, er
 	return company, nil
 }
 
-func (s *service) ListCompanies(ctx context.Context) ([]domain.Company, error) {
+func (s *service) ListAllCompanies(ctx context.Context) ([]domain.Company, error) {
 	companies, err := s.repo.ListAll(ctx)
 	if errors.Is(err, repository.ErrConflict) {
 		return nil, ErrCompanyConflict
