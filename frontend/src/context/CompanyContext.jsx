@@ -19,19 +19,33 @@ export function CompanyProvider({ children }) {
     const { isAuthenticated, isInitializing } = useAuth();
     const [companies, setCompanies] = useState([]);
     const [selectedCompanyId, setSelectedCompanyId] = useState(() => getStoredSelectedCompanyId());
+    const [isSwitchingCompany, setIsSwitchingCompany] = useState(false);
 
-    const handleSetSelectedCompanyId = useCallback((id) => {
-        if (id === null) {
-            setSelectedCompanyId(null);
-            return;
-        }
-        const nextId = Number(id);
-        setSelectedCompanyId(Number.isNaN(nextId) ? null : nextId);
+    const switchCompany = useCallback(
+        (id) => {
+            if (id === null) {
+                if (selectedCompanyId === null) return;
+                setIsSwitchingCompany(false);
+                setSelectedCompanyId(null);
+                return;
+            }
+            const nextId = Number(id);
+            const normalizedId = Number.isNaN(nextId) ? null : nextId;
+            if (normalizedId === selectedCompanyId) return;
+            setIsSwitchingCompany(true);
+            setSelectedCompanyId(normalizedId);
+        },
+        [selectedCompanyId]
+    );
+
+    const finishSwitchCompany = useCallback(() => {
+        setIsSwitchingCompany(false);
     }, []);
 
     const resetCompany = useCallback(() => {
         localStorage.removeItem(SELECTED_COMPANY_KEY);
         setSelectedCompanyId(null);
+        setIsSwitchingCompany(false);
     }, []);
 
     useEffect(() => {
@@ -62,17 +76,20 @@ export function CompanyProvider({ children }) {
             localStorage.setItem(SELECTED_COMPANY_KEY, String(selectedCompanyId));
         } else {
             localStorage.removeItem(SELECTED_COMPANY_KEY);
+            setIsSwitchingCompany(false);
         }
     }, [selectedCompanyId]);
 
     const value = useMemo(
         () => ({
             companies,
+            isSwitchingCompany,
             selectedCompanyId,
-            setSelectedCompanyId: handleSetSelectedCompanyId,
+            switchCompany,
+            finishSwitchCompany,
             resetCompany,
         }),
-        [companies, handleSetSelectedCompanyId, resetCompany, selectedCompanyId]
+        [companies, finishSwitchCompany, isSwitchingCompany, resetCompany, selectedCompanyId, switchCompany]
     );
 
     return <CompanyContext.Provider value={value}>{children}</CompanyContext.Provider>;

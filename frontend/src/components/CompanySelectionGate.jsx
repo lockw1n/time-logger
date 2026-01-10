@@ -2,7 +2,7 @@ import React from "react";
 import { useCompany } from "../context/CompanyContext";
 
 export default function CompanySelectionGate() {
-    const { companies, selectedCompanyId, setSelectedCompanyId } = useCompany();
+    const { companies, selectedCompanyId, switchCompany } = useCompany();
 
     return (
         <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-gray-800 p-6 text-gray-100 shadow-lg">
@@ -16,7 +16,7 @@ export default function CompanySelectionGate() {
                 className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 pr-10 text-gray-100"
                 value={selectedCompanyId ?? ""}
                 onChange={(event) =>
-                    setSelectedCompanyId(event.target.value ? Number(event.target.value) : null)
+                    switchCompany(event.target.value ? Number(event.target.value) : null)
                 }
                 disabled={companies.length === 0}
             >

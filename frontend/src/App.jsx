@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import { useAuth } from "./auth/AuthContext";
 import ProtectedApp from "./components/ProtectedApp";
-import TimesheetPage from "./components/TimesheetPage";
+import TimesheetPage from "./pages/TimesheetPage";
 import MePage from "./pages/Me";
 
 export default function App() {

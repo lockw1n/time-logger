@@ -8,7 +8,7 @@ export default function ProtectedApp({ path, children }) {
     const canRenderProtected = useAuthGuard(path);
     if (!canRenderProtected) return null;
     const { isAuthenticated, logout, user } = useAuth();
-    const { companies, selectedCompanyId, setSelectedCompanyId, resetCompany } = useCompany();
+    const { companies, selectedCompanyId, isSwitchingCompany, switchCompany, resetCompany } = useCompany();
     const firstName = (user?.first_name || user?.firstName || "").trim();
     const lastName = (user?.last_name || user?.lastName || "").trim();
     const fullName = [firstName, lastName].filter(Boolean).join(" ");
@@ -36,10 +36,9 @@ export default function ProtectedApp({ path, children }) {
                                 name="header-company-selection"
                                 className="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-[11px] text-gray-400"
                                 value={selectedCompanyId || ""}
+                                disabled={isSwitchingCompany}
                                 onChange={(event) =>
-                                    setSelectedCompanyId(
-                                        event.target.value ? Number(event.target.value) : null
-                                    )
+                                    switchCompany(event.target.value ? Number(event.target.value) : null)
                                 }
                             >
                                 <option value="">Select company</option>

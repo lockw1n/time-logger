@@ -85,6 +85,7 @@ export function useTimesheet(selectedCompanyId) {
     const [totalsPerDayMinutes, setTotalsPerDayMinutes] = useState({});
     const [overallMinutes, setOverallMinutes] = useState(0); // minutes from API; render converts to hours
     const [ticketOptions, setTicketOptions] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         setDays(getWeekDays(anchorDate, DAYS_WINDOW));
@@ -97,20 +98,26 @@ export function useTimesheet(selectedCompanyId) {
                 setTicketOptions([]);
                 setTotalsPerDayMinutes({});
                 setOverallMinutes(0);
+                setIsLoading(false);
                 return;
             }
+            setIsLoading(true);
             const { startStr, endStr } = buildRangeParams(anchor);
-            const data = await getTimesheet({
-                start: startStr,
-                end: endStr,
-                companyId: selectedCompanyId,
-            });
-            const { tableRows, ticketOptions, totalsPerDayMinutes, overallMinutes } =
-                buildRowsFromTimesheet(data?.rows || [], data?.totals || {});
-            setRows(tableRows);
-            setTicketOptions(ticketOptions);
-            setTotalsPerDayMinutes(totalsPerDayMinutes);
-            setOverallMinutes(overallMinutes);
+            try {
+                const data = await getTimesheet({
+                    start: startStr,
+                    end: endStr,
+                    companyId: selectedCompanyId,
+                });
+                const { tableRows, ticketOptions, totalsPerDayMinutes, overallMinutes } =
+                    buildRowsFromTimesheet(data?.rows || [], data?.totals || {});
+                setRows(tableRows);
+                setTicketOptions(ticketOptions);
+                setTotalsPerDayMinutes(totalsPerDayMinutes);
+                setOverallMinutes(overallMinutes);
+            } finally {
+                setIsLoading(false);
+            }
         },
         [anchorDate, selectedCompanyId]
     );
@@ -158,6 +165,7 @@ export function useTimesheet(selectedCompanyId) {
     return {
         anchorDate,
         days,
+        isLoading,
         rows,
         totalsPerDayMinutes,
         overallMinutes,
