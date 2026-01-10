@@ -1,6 +1,8 @@
 import { clearStoredAuth, getStoredExpiresAt, getStoredToken, isTokenExpired } from "../auth/storage";
 import { redirectToLogin } from "../auth/navigation";
 
+let handledUnauthorizedToken = null;
+
 const buildQuery = (params = {}) => {
     const entries = Object.entries(params).filter(([, value]) => value !== undefined);
     if (!entries.length) return "";
@@ -20,6 +22,9 @@ const getAuthHeaders = () => {
 };
 
 const handleUnauthorized = () => {
+    const tokenKey = getStoredToken() ?? "__no_token__";
+    if (handledUnauthorizedToken === tokenKey) return;
+    handledUnauthorizedToken = tokenKey;
     clearStoredAuth();
     redirectToLogin();
 };
