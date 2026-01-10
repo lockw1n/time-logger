@@ -170,8 +170,12 @@ export default function InvoiceGeneratorModal({ open, onCancel }) {
 
                 <div className="grid grid-cols-1 gap-4 text-sm max-w-xs">
                     <div className="flex flex-col gap-2">
-                        <label className="text-gray-300">Month</label>
+                        <label className="text-gray-300" htmlFor="invoice-month">
+                            Month
+                        </label>
                         <input
+                            id="invoice-month"
+                            name="invoice-month"
                             type="month"
                             value={form.month}
                             onChange={handleChange("month")}

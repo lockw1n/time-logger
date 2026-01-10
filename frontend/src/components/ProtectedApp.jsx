@@ -32,6 +32,8 @@ export default function ProtectedApp({ path, children }) {
                         </button>
                         {selectedCompanyId !== null ? (
                             <select
+                                id="header-company-selection"
+                                name="header-company-selection"
                                 className="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-[11px] text-gray-400"
                                 value={selectedCompanyId || ""}
                                 onChange={(event) =>

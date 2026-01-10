@@ -11,6 +11,8 @@ export default function CompanySelectionGate() {
                 Choose a company to load your timesheet and start logging time.
             </p>
             <select
+                id="company-selection"
+                name="company-selection"
                 className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 pr-10 text-gray-100"
                 value={selectedCompanyId ?? ""}
                 onChange={(event) =>

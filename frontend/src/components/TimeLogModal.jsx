@@ -56,6 +56,8 @@ export default function TimeLogModal({
                 <h2 className="text-xl font-semibold text-gray-100 mb-4">Log time</h2>
                 <div className="flex flex-col gap-3">
                     <input
+                        id="time-log-ticket"
+                        name="time-log-ticket"
                         type="text"
                         placeholder="Ticket key (e.g. ABC-123)"
                         value={ticket}
@@ -69,6 +71,8 @@ export default function TimeLogModal({
                         <span className="text-xs uppercase tracking-wide text-gray-400">Activity</span>
                         <div className="relative w-full">
                         <select
+                            id="time-log-activity"
+                            name="time-log-activity"
                             value={activityId ?? ""}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -104,6 +108,8 @@ export default function TimeLogModal({
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <input
+                            id="timesheet-duration"
+                            name="timesheet-duration"
                             type="text"
                             inputMode="decimal"
                             placeholder="Hours (e.g. 2.75 or 2h 15m)"
@@ -114,6 +120,8 @@ export default function TimeLogModal({
                             }`}
                         />
                         <input
+                            id="timesheet-date"
+                            name="timesheet-date"
                             type="date"
                             value={date}
                             onChange={(e) => onChangeDate(e.target.value)}

@@ -46,8 +46,13 @@ export default function Login() {
                 <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6 max-w-lg w-full">
                     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                         <div className="flex flex-col gap-2">
-                            <label className="text-gray-300">Email</label>
+                            <label className="text-gray-300" htmlFor="login-email">
+                                Email
+                            </label>
                             <input
+                                id="login-email"
+                                name="email"
+                                autoComplete="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -57,8 +62,13 @@ export default function Login() {
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label className="text-gray-300">Password</label>
+                            <label className="text-gray-300" htmlFor="login-password">
+                                Password
+                            </label>
                             <input
+                                id="login-password"
+                                name="password"
+                                autoComplete="current-password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
