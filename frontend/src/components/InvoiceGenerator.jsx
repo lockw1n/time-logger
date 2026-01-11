@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import InvoiceGeneratorModal from "./InvoiceGeneratorModal";
 
-export default function InvoiceGenerator() {
+export default function InvoiceGenerator({ overallMinutes = 0 }) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -12,7 +12,11 @@ export default function InvoiceGenerator() {
             >
                 Generate invoice
             </button>
-            <InvoiceGeneratorModal open={open} onCancel={() => setOpen(false)} />
+            <InvoiceGeneratorModal
+                open={open}
+                onCancel={() => setOpen(false)}
+                overallMinutes={overallMinutes}
+            />
         </div>
     );
 }
