@@ -45,3 +45,6 @@ frontend/yarn-error.log*
 frontend/package-lock.json
 frontend/.turbo/
 frontend/.vite/
+/.claude/
+/.tasks/
+/.mcp.json
